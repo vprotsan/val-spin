@@ -1,0 +1,198 @@
+**Indoor Cycling Playlist Designer**
+
+Requirements Specification
+
+Version 1.0  ·  June 2, 2026
+
+# Contents
+
+# 1. Overview
+
+A web application that helps indoor cycling instructors design class playlists, integrated with Spotify. The instructor builds a playlist as an ordered sequence of cue-based segments, tags individual songs to a cue type, and marks the precise moments within each song where an action (such as a jump sequence) occurs.
+
+The application is mobile-first: an instructor will frequently set up and adjust playlists on a phone, including beside the bike. Mobile is treated as a first-class, likely primary, experience.
+
+## 1.1 The Five Cues
+
+Every song is assigned to exactly one cue category, and the playlist is composed of segments of these cues:
+
+- Jumps
+
+- Climbs
+
+- Sprints
+
+- Choreo
+
+- Flat
+
+## 1.2 Scope of This Version (v1)
+
+This document specifies version 1. Persistence is limited to a single session (no database, no accounts beyond Spotify authentication). Items deferred to later versions are listed in Section 7.
+
+# 2. Core User Flow
+
+- The user authenticates with Spotify via OAuth. A Spotify Premium account is required.
+
+- The user finds songs two ways: by searching Spotify and by browsing their own Spotify library and playlists.
+
+- The user tags each song with exactly one cue (Jumps, Climbs, Sprints, Choreo, or Flat).
+
+- Selecting a cue displays the list of songs the user has tagged with that cue. The list may be empty or populated depending on prior tagging.
+
+- Within any song, the user marks one or more in-track sequences — time spans identifying when an action occurs (see Section 3).
+
+- The user builds a playlist as an ordered sequence of cue segments (for example: Flat → Climb → Sprint → Climb → Flat), placing songs into the segment for each cue.
+
+- Each segment displays its total duration.
+
+- The user saves the finished playlist back to their Spotify account.
+
+# 3. In-track Sequences
+
+A sequence is a labeled time span inside a single song that marks exactly when an action happens (for example, when the jump sequence begins and ends). Sequences let the instructor know, mid-class, precisely where the action is in each track.
+
+## 3.1 Definition
+
+- A sequence is a span with both a start time and an end time (not a single point).
+
+- A song may have multiple sequences.
+
+- Sequences within a song must not overlap. Creating a sequence that overlaps an existing one is rejected by validation.
+
+- Sequences sort naturally by start time.
+
+- Each sequence carries an optional free-text note.
+
+- A sequence inherits its cue from the parent song; it does not store its own cue. Because a song belongs to exactly one cue, all of that song’s sequences belong to that same cue.
+
+## 3.2 Marking Timestamps
+
+The user sets a sequence by playing the track and tapping a button to capture the current playhead position — a “Mark Start” / “Mark End” pattern. This requires real-time playback position from the Spotify Web Playback SDK, which in turn requires a Premium account. (See Section 5 for the platform constraint.)
+
+# 4. Cue Reassignment
+
+A song’s cue can be changed at any time, moving it from one cue category to another (for example, Climbs → Sprints). When a song is reassigned:
+
+- All of its in-track sequences (timestamps and notes) are preserved unchanged.
+
+- The song leaves its previous cue’s list and appears under the new cue, carrying its sequences with it.
+
+This is structurally trivial because sequences carry only timestamps and a note and inherit the song’s current cue — reassignment is a single change to the song’s cue field with no effect on its sequences. Note: a sequence’s free-text note may reference the old cue’s vocabulary after a move; this is left as the user’s responsibility and requires no system action.
+
+# 5. Spotify Integration & Platform Constraints
+
+## 5.1 Authentication & Scopes
+
+The application uses Spotify OAuth and requires a registered Spotify Developer app with a configured redirect URI, plus a backend to hold the access token securely. This is not a frontend-only project.
+
+Required scopes:
+
+- user-library-read — read the user’s saved tracks and library
+
+- playlist-read-private — read the user’s private playlists
+
+- playlist-modify-private and/or playlist-modify-public — save the finished playlist back
+
+- streaming and related scopes — for full-track playback via the Web Playback SDK
+
+## 5.2 Playback
+
+Full-track playback uses the Spotify Web Playback SDK and requires the listener to have Spotify Premium. v1 requires Premium and does not provide a non-Premium fallback. This requirement supports the Mark Start / Mark End timestamp feature in Section 3.2.
+
+## 5.3 BPM Data — Important Constraint
+
+Spotify deprecated its Audio Features endpoint (the source of tempo/BPM data). Only apps approved before November 27, 2024 retain access; newly registered apps receive a 403 Forbidden response. Because this project requires a new Spotify app, Spotify-provided BPM is not available.
+
+BPM is therefore deferred from v1. See Section 6 for the required extensibility approach so BPM can be added later from a third-party source.
+
+## 5.4 Audio Previews
+
+Spotify’s 30-second preview availability has become unreliable and should not be assumed. The application relies on full playback (Premium) rather than previews.
+
+# 6. BPM — Deferred but Designed-For
+
+BPM is out of scope for v1, but the architecture must be built so that BPM can be added later from a third-party provider (such as GetSongBPM or Cyanite) without reworking the data model or core logic. Three provisions are required:
+
+- Reserve the field. Keep an optional, nullable bpm field on the Song model. It is always empty in v1; this avoids a future migration.
+
+- Isolate the source behind an interface. Route all BPM retrieval through a single swappable provider (conceptually, a BpmProvider with a method such as getBpm(song) returning a number or null). In v1 this is a no-op returning null. Later, a real implementation is swapped in without touching UI or playlist code.
+
+- Degrade gracefully. Any UI location that would show BPM must render nothing (or a subtle placeholder) when BPM is null, rather than breaking. This display path is built in v1 even though it always shows empty.
+
+Explicitly NOT built in v1: any third-party API call, credentials for a BPM service, or manual BPM-entry UI. Adding BPM later must require no changes to the data model or core playlist logic.
+
+# 7. Data Model
+
+Single session; no database. State is held in memory for the duration of the session.
+
+## 7.1 Song
+
+| **Field** | **Description** |
+| --- | --- |
+| **id** | Unique identifier. |
+| **title** | Track title. |
+| **artist** | Track artist. |
+| **durationMs** | Track length in milliseconds. |
+| **spotifyUri** | Spotify URI for playback and saving. |
+| **cue** | Exactly one of: Jumps, Climbs, Sprints, Choreo, Flat. |
+| **bpm** | Optional / nullable. Always empty in v1; reserved for future BPM support. |
+| **sequences[]** | Ordered by start time, non-overlapping. See Sequence. |
+
+## 7.2 Sequence
+
+| **Field** | **Description** |
+| --- | --- |
+| **startMs** | Start of the span, in milliseconds. |
+| **endMs** | End of the span, in milliseconds. Must be greater than startMs. |
+| **note** | Optional free-text note. |
+
+**Invariants: **cue is inherited from the parent Song and is not stored on the sequence; no two sequences on the same song may overlap.
+
+## 7.3 Segment
+
+A single step in the playlist.
+
+| **Field** | **Description** |
+| --- | --- |
+| **cue** | The cue type for this segment. |
+| **songs[]** | Ordered list of songs in this segment. |
+| **totalDuration** | Computed sum of the segment’s song durations. |
+
+## 7.4 Playlist
+
+| **Field** | **Description** |
+| --- | --- |
+| **segments[]** | Ordered sequence of cue segments that make up the class playlist. |
+
+# 8. UX & Platform Requirements
+
+Mobile-first responsive design: laid out for narrow phone screens first, scaling up to desktop — not desktop-first scaled down. The interface must be clean, uncluttered, and easy to learn, prioritizing the three core flows (tagging songs, building the cue-segment playlist, and marking in-track sequences).
+
+Touch-optimized controls throughout, with particular attention to:
+
+- Mark Start / Mark End buttons must be large, thumb-reachable, and hard to misfire, since the user taps them while the song plays and their attention is on the music.
+
+- Ordering playlist segments and songs must use a touch-reliable method (e.g. well-sized drag handles, or up/down / move actions) rather than fiddly desktop-style dragging.
+
+- Cue selection (five categories) suits large tappable cards or a segmented control rather than a dropdown.
+
+- Spotify search and library browsing are list-heavy and must remain readable and scrollable on a narrow screen with no horizontal overflow.
+
+# 9. Out of Scope (v1)
+
+- Automatic tagging of songs by audio features.
+
+- Cross-session saving, accounts, or a database (beyond Spotify authentication).
+
+- Multiple cues per song (a song belongs to exactly one cue).
+
+- Sequences with their own cue distinct from the song (sequences inherit the song’s cue).
+
+- BPM display and any BPM data source (deferred; architecture must reserve for it per Section 6).
+
+- Non-Premium playback fallback.
+
+- Audio previews.
+
+Indoor Cycling Playlist Designer — Requirements v1.0   |   Page
