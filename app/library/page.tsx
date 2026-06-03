@@ -4,20 +4,17 @@ import { getSavedTracks, getUserPlaylists } from '@/lib/spotify-api';
 import type { SpotifyTrack, SpotifyPlaylist } from '@/lib/spotify-api';
 import Link from 'next/link';
 
-// Which tab is shown is driven by a ?tab= search param so it's server-rendered
-// and bookmarkable, with no client JS needed.
 export default async function LibraryPage({
   searchParams,
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
   const token = await getValidAccessToken();
-  if (!token) redirect('/');
+  if (!token) redirect('/api/auth/clear');
 
   const { tab } = await searchParams;
   const activeTab = tab === 'playlists' ? 'playlists' : 'tracks';
 
-  // Fetch both in parallel; each resolves independently
   const [tracks, playlists] = await Promise.all([
     getSavedTracks(token, 200),
     getUserPlaylists(token),
@@ -25,7 +22,6 @@ export default async function LibraryPage({
 
   return (
     <main className="min-h-screen bg-black pb-24">
-      {/* Sticky header */}
       <header className="sticky top-0 z-10 bg-black/90 backdrop-blur-sm border-b border-zinc-800 px-4 pt-5 pb-3">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-3">
@@ -35,22 +31,15 @@ export default async function LibraryPage({
                 {tracks.length} saved tracks &middot; {playlists.length} playlists
               </p>
             </div>
-            <Link
-              href="/dashboard"
-              className="text-zinc-400 hover:text-white text-sm transition-colors"
-            >
+            <Link href="/dashboard" className="text-zinc-400 hover:text-white text-sm transition-colors">
               ← Back
             </Link>
           </div>
-
-          {/* Tabs */}
           <div className="flex gap-2">
             <Link
               href="/library?tab=tracks"
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                activeTab === 'tracks'
-                  ? 'bg-white text-black'
-                  : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                activeTab === 'tracks' ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white'
               }`}
             >
               Saved Tracks
@@ -58,9 +47,7 @@ export default async function LibraryPage({
             <Link
               href="/library?tab=playlists"
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                activeTab === 'playlists'
-                  ? 'bg-white text-black'
-                  : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                activeTab === 'playlists' ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white'
               }`}
             >
               Playlists
@@ -80,91 +67,55 @@ export default async function LibraryPage({
   );
 }
 
-// ── Track list ─────────────────────────────────────────────────────────────────
-
 function TrackList({ tracks }: { tracks: SpotifyTrack[] }) {
   if (tracks.length === 0) {
-    return (
-      <p className="text-zinc-500 text-sm py-12 text-center">
-        No saved tracks found. Save some songs in Spotify first.
-      </p>
-    );
+    return <p className="text-zinc-500 text-sm py-12 text-center">No saved tracks found.</p>;
   }
-
   return (
     <ul>
-      {tracks.map((track) => (
-        <TrackRow key={track.id} track={track} />
-      ))}
+      {tracks.map((track) => <TrackRow key={track.id} track={track} />)}
     </ul>
   );
 }
 
 function TrackRow({ track }: { track: SpotifyTrack }) {
   const artistNames = track.artists.map((a) => a.name).join(', ');
-  const thumb = track.album.images.find((img) => img.width && img.width <= 64)?.url
-    ?? track.album.images.at(-1)?.url;
-  const duration = formatDuration(track.duration_ms);
-
+  const thumb = track.album.images.find((img) => img.width && img.width <= 64)?.url ?? track.album.images.at(-1)?.url;
   return (
     <li className="flex items-center gap-3 py-3 border-b border-zinc-800/60 last:border-0">
-      {/* Album art */}
       {thumb ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={thumb}
-          alt={track.album.name}
-          className="w-11 h-11 rounded object-cover shrink-0 bg-zinc-800"
-        />
+        <img src={thumb} alt={track.album.name} className="w-11 h-11 rounded object-cover shrink-0 bg-zinc-800" />
       ) : (
         <div className="w-11 h-11 rounded bg-zinc-800 shrink-0" />
       )}
-
-      {/* Title / artist */}
       <div className="flex-1 min-w-0">
         <p className="text-white text-sm font-medium truncate">{track.name}</p>
         <p className="text-zinc-400 text-xs truncate">{artistNames}</p>
       </div>
-
-      {/* Duration */}
-      <span className="text-zinc-600 text-xs shrink-0 tabular-nums">{duration}</span>
+      <span className="text-zinc-600 text-xs shrink-0 tabular-nums">{formatDuration(track.duration_ms)}</span>
     </li>
   );
 }
 
-// ── Playlist list ──────────────────────────────────────────────────────────────
-
 function PlaylistList({ playlists }: { playlists: SpotifyPlaylist[] }) {
   if (playlists.length === 0) {
-    return (
-      <p className="text-zinc-500 text-sm py-12 text-center">
-        No playlists found.
-      </p>
-    );
+    return <p className="text-zinc-500 text-sm py-12 text-center">No playlists found.</p>;
   }
-
   return (
     <ul>
-      {playlists.map((pl) => (
-        <PlaylistRow key={pl.id} playlist={pl} />
-      ))}
+      {playlists.map((pl) => <PlaylistRow key={pl.id} playlist={pl} />)}
     </ul>
   );
 }
 
 function PlaylistRow({ playlist }: { playlist: SpotifyPlaylist }) {
   const thumb = playlist.images?.[0]?.url;
-
   return (
     <li className="flex items-center gap-3 py-3 border-b border-zinc-800/60 last:border-0">
-      {/* Cover art */}
       {thumb ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={thumb}
-          alt={playlist.name}
-          className="w-11 h-11 rounded object-cover shrink-0 bg-zinc-800"
-        />
+        <img src={thumb} alt={playlist.name} className="w-11 h-11 rounded object-cover shrink-0 bg-zinc-800" />
       ) : (
         <div className="w-11 h-11 rounded bg-zinc-800 shrink-0 flex items-center justify-center text-zinc-600">
           <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
@@ -172,8 +123,6 @@ function PlaylistRow({ playlist }: { playlist: SpotifyPlaylist }) {
           </svg>
         </div>
       )}
-
-      {/* Name / owner / count */}
       <div className="flex-1 min-w-0">
         <p className="text-white text-sm font-medium truncate">{playlist.name}</p>
         <p className="text-zinc-400 text-xs truncate">
@@ -184,11 +133,7 @@ function PlaylistRow({ playlist }: { playlist: SpotifyPlaylist }) {
   );
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 function formatDuration(ms: number): string {
-  const totalSec = Math.round(ms / 1000);
-  const mins = Math.floor(totalSec / 60);
-  const secs = totalSec % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const s = Math.round(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }

@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 export default async function PlayerPage() {
   const token = await getValidAccessToken();
-  if (!token) redirect('/');
+  if (!token) redirect('/api/auth/clear');
 
   // Fetch first 50 saved tracks — enough to pick one for the step-4 proof
   const tracks = await getSavedTracks(token, 50);

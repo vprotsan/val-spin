@@ -5,7 +5,7 @@ import { getValidAccessToken } from '@/lib/spotify-auth';
 interface SpotifyUser {
   display_name: string;
   email: string;
-  product: string; // 'premium' | 'free' | ...
+  product: string;
   images: { url: string }[];
 }
 
@@ -20,7 +20,7 @@ async function getSpotifyUser(token: string): Promise<SpotifyUser> {
 
 export default async function DashboardPage() {
   const token = await getValidAccessToken();
-  if (!token) redirect('/');
+  if (!token) redirect('/api/auth/clear');
 
   let user: SpotifyUser;
   try {
@@ -71,6 +71,17 @@ export default async function DashboardPage() {
         )}
 
         {/* Navigation */}
+        <Link
+          href="/tagging"
+          className="w-full flex items-center justify-between rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors px-5 py-4"
+        >
+          <div>
+            <p className="text-white font-medium text-sm">Tag Songs</p>
+            <p className="text-zinc-500 text-xs mt-0.5">Assign cues · browse &amp; search</p>
+          </div>
+          <span className="text-zinc-500 text-lg">→</span>
+        </Link>
+
         <Link
           href="/library"
           className="w-full flex items-center justify-between rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors px-5 py-4"
