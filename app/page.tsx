@@ -1,65 +1,62 @@
-import Image from "next/image";
+import { redirect } from 'next/navigation';
+import { getSession } from '@/lib/session';
 
-export default function Home() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const session = await getSession();
+  if (session) redirect('/dashboard');
+
+  const { error } = await searchParams;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen flex flex-col items-center justify-center bg-black px-6">
+      <div className="w-full max-w-sm flex flex-col items-center gap-8">
+        {/* Logo / heading */}
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-white tracking-tight">
+            Cycling Playlist
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-2 text-zinc-400 text-sm">
+            Build cue-based playlists for your indoor cycling class.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        {/* Error banner */}
+        {error && (
+          <div className="w-full rounded-lg bg-red-900/50 border border-red-700 px-4 py-3 text-sm text-red-200">
+            {friendlyError(error)}
+          </div>
+        )}
+
+        {/* Login button */}
+        <a
+          href="/api/auth/login"
+          className="w-full flex items-center justify-center gap-3 rounded-full bg-[#1DB954] hover:bg-[#1ed760] active:scale-95 transition-all px-6 py-4 text-black font-semibold text-base"
+        >
+          {/* Spotify logo mark */}
+          <svg viewBox="0 0 24 24" className="w-6 h-6 shrink-0" fill="currentColor">
+            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
+          </svg>
+          Connect to Spotify
+        </a>
+
+        <p className="text-zinc-600 text-xs text-center">
+          Spotify Premium required for full playback.
+        </p>
+      </div>
+    </main>
   );
+}
+
+function friendlyError(code: string): string {
+  const map: Record<string, string> = {
+    access_denied: 'You declined the Spotify permission request.',
+    state_mismatch: 'Security check failed — please try again.',
+    token_exchange_failed: 'Could not connect to Spotify — please try again.',
+    missing_params: 'Something went wrong with the login flow.',
+  };
+  return map[code] ?? `Login error: ${code}`;
 }
