@@ -1,6 +1,7 @@
 'use client';
 
 import { useTransition, useState } from 'react';
+import Link from 'next/link';
 import { untagSong, changeSongCue } from '@/app/actions/songs';
 import { CUE_TYPES } from '@/types';
 import type { Cue, Song } from '@/types';
@@ -39,11 +40,18 @@ export default function TaggedSongRow({ song }: { song: Song }) {
           ♪
         </div>
 
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <p className="text-white text-sm font-medium truncate">{song.title}</p>
-          <p className="text-zinc-400 text-xs truncate">{song.artist}</p>
-        </div>
+        {/* Info — tap to open sequence editor */}
+        <Link href={`/songs/${song.id}`} className="flex-1 min-w-0 group">
+          <p className="text-white text-sm font-medium truncate group-hover:text-zinc-200">{song.title}</p>
+          <p className="text-zinc-400 text-xs truncate">
+            {song.artist}
+            {song.sequences.length > 0 && (
+              <span className="ml-2 text-zinc-600">
+                {song.sequences.length} seq
+              </span>
+            )}
+          </p>
+        </Link>
 
         {/* Cue pill — tap to reassign */}
         <button
