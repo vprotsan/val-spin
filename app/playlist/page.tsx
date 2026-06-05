@@ -13,7 +13,6 @@ export default async function PlaylistPage() {
   const playlist = getPlaylist();
   const allSongs = getAllSongs();
 
-  // Group tagged songs by cue for the segment song pickers
   const songsByCue = Object.fromEntries(
     CUE_TYPES.map((cue) => [cue, allSongs.filter((s) => s.cue === cue)]),
   ) as Record<Cue, Song[]>;
@@ -33,6 +32,7 @@ export default async function PlaylistPage() {
       </header>
 
       <div className="max-w-lg mx-auto px-4 pt-5">
+        {/* PlaylistBuilder owns all client state including SaveToSpotify */}
         <PlaylistBuilder
           initialSegments={playlist.segments}
           songsByCue={songsByCue}

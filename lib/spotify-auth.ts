@@ -21,6 +21,9 @@ export function buildAuthUrl(state: string): string {
     scope: SCOPES,
     redirect_uri: process.env.SPOTIFY_REDIRECT_URI!,
     state,
+    // Force the permissions dialog every login so Spotify re-grants all
+    // current scopes rather than silently reusing an older authorization.
+    show_dialog: 'true',
   });
   return `${SPOTIFY_ACCOUNTS}/authorize?${params}`;
 }

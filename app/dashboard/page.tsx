@@ -115,14 +115,12 @@ export default async function DashboardPage() {
           <span className="text-zinc-500 text-lg">→</span>
         </Link>
 
-        <form action="/api/auth/logout" method="POST">
-          <button
-            type="submit"
-            className="w-full rounded-full border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 py-3 text-sm font-medium transition-colors"
-          >
-            Disconnect
-          </button>
-        </form>
+        <a
+          href="/api/auth/logout"
+          className="block w-full rounded-full border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 py-3 text-sm font-medium transition-colors text-center"
+        >
+          Log out / Disconnect
+        </a>
       </div>
     </main>
   );

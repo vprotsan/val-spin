@@ -11,6 +11,7 @@ import {
 } from '@/app/actions/playlist';
 import { CUE_TYPES } from '@/types';
 import type { Cue, Segment, Song } from '@/types';
+import SaveToSpotify from './SaveToSpotify';
 
 // ── Cue colour tokens ─────────────────────────────────────────────────────────
 
@@ -195,6 +196,13 @@ export default function PlaylistBuilder({
           <span className="text-lg leading-none">+</span> Add Segment
         </button>
       )}
+
+      {/* Save — reads live segments state so track count stays accurate */}
+      <div className="border-t border-zinc-800 pt-4">
+        <SaveToSpotify
+          totalTracks={segments.reduce((sum, seg) => sum + seg.songs.length, 0)}
+        />
+      </div>
     </div>
   );
 }

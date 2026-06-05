@@ -1,8 +1,10 @@
 import { clearSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 
-// POST /api/auth/logout — clears the session cookie and returns to login
-export async function POST() {
+// Supports both GET (link) and POST (legacy form) so either trigger works.
+async function logout() {
   await clearSession();
   redirect('/');
 }
+
+export { logout as GET, logout as POST };
