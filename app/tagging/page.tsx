@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { getValidAccessToken } from '@/lib/spotify-auth';
+import { getValidAccessToken, getSpotifyUserId } from '@/lib/spotify-auth';
 import { getAllSongs, getSongsByCue } from '@/lib/store';
+import { ensureHydrated } from '@/lib/db/hydrate';
 import { CUE_TYPES } from '@/types';
 import type { Cue } from '@/types';
 import CueGrid from '@/components/tagging/CueGrid';
@@ -16,12 +17,16 @@ export default async function TaggingPage({
   const token = await getValidAccessToken();
   if (!token) redirect('/api/auth/clear');
 
+  // Hydrate from Supabase if the server restarted since last login
+  const userId = await getSpotifyUserId();
+  if (userId) await ensureHydrated(userId);
+
   const { cue: cueParam } = await searchParams;
   const selectedCue: Cue = CUE_TYPES.includes(cueParam as Cue)
     ? (cueParam as Cue)
     : 'Jumps';
 
-  // Read from the in-memory store
+  // Read from the in-memory store (now guaranteed to be populated)
   const allSongs = getAllSongs();
   const taggedForCue = getSongsByCue(selectedCue);
 

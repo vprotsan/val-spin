@@ -56,7 +56,10 @@ async function postToTokenEndpoint(body: URLSearchParams): Promise<TokenResponse
   return res.json();
 }
 
-export async function exchangeCode(code: string): Promise<SpotifySession> {
+// exchangeCode returns tokens only — the callback fetches /v1/me and adds spotifyUserId.
+type TokensOnly = Omit<SpotifySession, 'spotifyUserId'>;
+
+export async function exchangeCode(code: string): Promise<TokensOnly> {
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
     code,
@@ -76,12 +79,20 @@ export async function refreshAccessToken(refreshToken: string): Promise<SpotifyS
     refresh_token: refreshToken,
   });
   const data = await postToTokenEndpoint(body);
+  // Carry the user ID forward — it doesn't change on refresh
+  const currentSession = await getSession();
   return {
     accessToken: data.access_token,
-    // Spotify may or may not return a new refresh token
     refreshToken: data.refresh_token ?? refreshToken,
     expiresAt: Date.now() + data.expires_in * 1000,
+    spotifyUserId: currentSession?.spotifyUserId ?? '',
   };
+}
+
+/** Returns the Spotify user ID from the current session, or null if not logged in. */
+export async function getSpotifyUserId(): Promise<string | null> {
+  const session = await getSession();
+  return session?.spotifyUserId ?? null;
 }
 
 /**

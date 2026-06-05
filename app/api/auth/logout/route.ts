@@ -1,9 +1,10 @@
 import { clearSession } from '@/lib/session';
+import { clearHydrationState } from '@/lib/db/hydrate';
 import { redirect } from 'next/navigation';
 
-// Supports both GET (link) and POST (legacy form) so either trigger works.
 async function logout() {
   await clearSession();
+  clearHydrationState();
   redirect('/');
 }
 

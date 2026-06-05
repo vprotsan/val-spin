@@ -13,7 +13,8 @@ function getKey(): Uint8Array {
 export interface SpotifySession {
   accessToken: string;
   refreshToken: string;
-  expiresAt: number; // Unix ms timestamp
+  expiresAt: number;    // Unix ms timestamp
+  spotifyUserId: string; // stored so actions don't need an extra /v1/me call
 }
 
 export async function encryptSession(payload: SpotifySession): Promise<string> {
