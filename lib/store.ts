@@ -373,6 +373,23 @@ export function playlistDurationMs(): number {
   return getPlaylist().segments.reduce((sum, seg) => sum + segmentDurationMs(seg), 0);
 }
 
+// ── Bulk hydration ────────────────────────────────────────────────────────────
+
+/**
+ * Overwrite a song's sequence list wholesale — used when hydrating from
+ * Supabase so we bypass the per-sequence overlap validation (the DB is
+ * the source of truth and is assumed to be valid).
+ */
+export function bulkLoadSequences(songId: string, sequences: Sequence[]): void {
+  const store = getStore();
+  const song = store.songs.get(songId);
+  if (!song) return;
+  const sorted = [...sequences].sort((a, b) => a.startMs - b.startMs);
+  const updated: Song = { ...song, sequences: sorted };
+  store.songs.set(songId, updated);
+  syncSongIntoPlaylist(store, updated);
+}
+
 // ── Reset (useful in tests / dev) ─────────────────────────────────────────────
 
 export function resetStore(): void {

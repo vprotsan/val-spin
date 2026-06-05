@@ -5,6 +5,7 @@ import { getValidAccessToken, getSpotifyUserId } from '@/lib/spotify-auth';
 import { addSong, removeSong, reassignCue, getSong } from '@/lib/store';
 import { ensureHydrated } from '@/lib/db/hydrate';
 import { upsertTag, deleteTag } from '@/lib/db/tags';
+import { deleteSequencesForSong } from '@/lib/db/sequences';
 import type { Cue } from '@/types';
 
 async function requireAuth(): Promise<string> {
@@ -52,8 +53,11 @@ export async function untagSong(songId: string): Promise<void> {
   removeSong(songId);
 
   if (song) {
+    // Delete tag and all sequences for this song
     deleteTag(userId, song.spotifyUri)
       .catch((err) => console.error('deleteTag failed:', err));
+    deleteSequencesForSong(userId, song.spotifyUri)
+      .catch((err) => console.error('deleteSequencesForSong failed:', err));
   }
 
   revalidatePath('/tagging');

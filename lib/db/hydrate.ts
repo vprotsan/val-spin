@@ -1,9 +1,10 @@
 import 'server-only';
 import { loadTagsForUser } from './tags';
-import { addSong, getAllSongs, resetStore } from '@/lib/store';
+import { loadSequencesForUser } from './sequences';
+import { addSong, getAllSongs, bulkLoadSequences } from '@/lib/store';
+import type { Sequence } from '@/types';
 
 // ── Hydration state ───────────────────────────────────────────────────────────
-// Tracked on globalThis so it survives Next.js HMR but resets on server restart.
 
 declare global {
   // eslint-disable-next-line no-var
@@ -18,10 +19,13 @@ declare global {
 export async function ensureHydrated(spotifyUserId: string): Promise<void> {
   if (globalThis.__storeHydratedForUser === spotifyUserId) return;
 
-  const tags = await loadTagsForUser(spotifyUserId);
+  // ── 1. Tags ────────────────────────────────────────────────────────────────
+  const [tags, sequencesByUri] = await Promise.all([
+    loadTagsForUser(spotifyUserId),
+    loadSequencesForUser(spotifyUserId),
+  ]);
 
-  // Merge with anything already in the store (avoids wiping sequences that
-  // were added in this session but not yet persisted).
+  // Merge tags into the store (don't wipe sequences already in memory)
   const existing = getAllSongs();
   const existingUris = new Set(existing.map((s) => s.spotifyUri));
 
@@ -35,6 +39,24 @@ export async function ensureHydrated(spotifyUserId: string): Promise<void> {
         cue: tag.cue,
       });
     }
+  }
+
+  // ── 2. Sequences ───────────────────────────────────────────────────────────
+  // Build a spotifyUri → store songId map (includes songs just added above)
+  const allSongs = getAllSongs();
+  const uriToSongId = new Map(allSongs.map((s) => [s.spotifyUri, s.id]));
+
+  for (const [uri, rows] of sequencesByUri) {
+    const songId = uriToSongId.get(uri);
+    if (!songId) continue; // sequence for an untagged song — ignore
+
+    const sequences: Sequence[] = rows.map((r) => ({
+      id: r.id,
+      startMs: r.start_ms,
+      endMs: r.end_ms,
+      ...(r.note ? { note: r.note } : {}),
+    }));
+    bulkLoadSequences(songId, sequences);
   }
 
   globalThis.__storeHydratedForUser = spotifyUserId;
