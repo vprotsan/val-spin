@@ -277,26 +277,52 @@ export default function ConnectPlayer({ songs }: { songs: Song[] }) {
     setError('');
     try {
       const token = await fetchToken();
-      // Transfer playback to our chosen device first, then play
-      await apiTransfer(selectedDeviceId, token);
+
+      // device_id in the URL handles the transfer implicitly — no separate
+      // apiTransfer call needed (that caused a race condition on iOS).
       await apiPlayQueue(uris, idx, selectedDeviceId, token);
+
+      // Wait briefly for Spotify to process the command, then verify it
+      // actually started. This catches the iOS "silent ignore" case where
+      // the app accepts the HTTP call but doesn't actually start playing.
+      await new Promise((r) => setTimeout(r, 800));
+      const verifyToken = await fetchToken();
+      const state = await apiGetPlaybackState(verifyToken);
+
+      if (!state || !state.is_playing) {
+        // Spotify received the command but didn't start — usually means the
+        // app was idle (never played anything this session) on iOS.
+        setError(
+          'Spotify received the command but didn\'t start playing. ' +
+          'Play any song in the Spotify app first, then press ▶ here.',
+        );
+        setIsPlaying(false);
+        stopTick();
+        return;
+      }
+
+      // Confirmed playing — sync from server state
       setCurrentIndex(idx);
       setHasStarted(true);
       setIsPlaying(true);
       isPlayingRef.current = true;
-      setPositionMs(0);
+      setPositionMs(state.progress_ms);
+      setDurationMs(state.item?.duration_ms ?? 0);
       startTick();
       startPoll();
     } catch (e) {
       const status = (e as { status?: number }).status;
       if (status === 404) {
-        setError('Device not found. Open Spotify on your device, then try again.');
+        setError('Device not found — open the Spotify app and try Refresh.');
+      } else if (status === 403) {
+        setError('Spotify rejected the command. Make sure Premium is active.');
       } else {
-        setError('Playback failed. Make sure the Spotify app is open on your device.');
+        setError('Playback failed. Open the Spotify app, play any song, then press ▶ here.');
       }
       setIsPlaying(false);
+      stopTick();
     }
-  }, [selectedDeviceId, uris, startTick, startPoll]);
+  }, [selectedDeviceId, uris, startTick, stopTick, startPoll]);
 
   // ── Controls ──────────────────────────────────────────────────────────────────
 
@@ -426,7 +452,10 @@ export default function ConnectPlayer({ songs }: { songs: Song[] }) {
               </div>
             ) : (
               <div className="space-y-1.5">
-                <p className="text-zinc-500 text-sm">Choose a Spotify device to play on:</p>
+                <p className="text-zinc-500 text-sm">
+                  Choose a device. If your phone shows a grey dot, play any song
+                  in Spotify first to activate it, then come back.
+                </p>
                 {devices.filter((d) => !d.is_restricted).map((d) => (
                   <button
                     key={d.id}
@@ -436,9 +465,14 @@ export default function ConnectPlayer({ songs }: { songs: Song[] }) {
                     <span className="text-xl">{deviceIcon(d.type)}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-base truncate">{d.name}</p>
-                      <p className="text-zinc-500 text-sm">{d.type}{d.is_active ? ' · active' : ''}</p>
+                      <p className="text-zinc-500 text-sm">
+                        {d.type}
+                        {d.is_active
+                          ? <span className="text-[#1DB954] ml-1">· ready</span>
+                          : <span className="text-zinc-600 ml-1">· needs activation</span>}
+                      </p>
                     </div>
-                    {d.is_active && <span className="text-[#1DB954] text-sm shrink-0">●</span>}
+                    <span className={`text-sm shrink-0 ${d.is_active ? 'text-[#1DB954]' : 'text-zinc-700'}`}>●</span>
                   </button>
                 ))}
               </div>
