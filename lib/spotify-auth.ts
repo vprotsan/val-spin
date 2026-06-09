@@ -9,9 +9,12 @@ const SCOPES = [
   'playlist-read-private',
   'playlist-modify-private',
   'playlist-modify-public',
-  'streaming',
+  'streaming',                    // Web Playback SDK (desktop)
   'user-read-email',
-  'user-read-private', // required for Premium check + Web Playback SDK
+  'user-read-private',            // Premium check + Web Playback SDK
+  'user-read-playback-state',     // Spotify Connect: read devices + current track
+  'user-modify-playback-state',   // Spotify Connect: play, pause, seek, next, prev
+  'user-read-currently-playing',  // Spotify Connect: current track polling
 ].join(' ');
 
 export function buildAuthUrl(state: string): string {
