@@ -53,9 +53,9 @@ export default function AddSongSheet({ defaultCue, taggedUris }: Props) {
       {/* Trigger button */}
       <button
         onClick={() => setOpen(true)}
-        className="w-full flex items-center justify-center gap-2 rounded-2xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 py-3.5 text-white font-medium text-sm transition-colors active:scale-95"
+        className="w-full flex items-center justify-center gap-2 rounded-2xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 py-3.5 text-white font-medium text-base transition-colors active:scale-95"
       >
-        <span className="text-lg leading-none">+</span> Add Song
+        <span className="text-xl leading-none">+</span> Add Song
       </button>
 
       {/* Sheet overlay */}
@@ -113,10 +113,10 @@ function Sheet({
     <div className="fixed inset-0 z-50 flex flex-col bg-zinc-950">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-5 pb-3 border-b border-zinc-800 shrink-0">
-        <h2 className="text-white font-semibold text-base">Add Song</h2>
+        <h2 className="text-white font-semibold text-xl">Add Song</h2>
         <button
           onClick={onClose}
-          className="text-zinc-400 hover:text-white text-2xl leading-none transition-colors"
+          className="text-zinc-400 hover:text-white text-3xl leading-none transition-colors"
           aria-label="Close"
         >
           ×
@@ -129,7 +129,7 @@ function Sheet({
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors capitalize ${
+            className={`px-4 py-1.5 rounded-full text-base font-medium transition-colors capitalize ${
               tab === t ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white'
             }`}
           >
@@ -147,7 +147,7 @@ function Sheet({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Artist, song, album…"
-            className="w-full rounded-xl bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 px-4 py-2.5 text-sm outline-none focus:border-zinc-500"
+            className="w-full rounded-xl bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 px-4 py-2.5 text-base outline-none focus:border-zinc-500"
           />
         </div>
       )}
@@ -169,13 +169,13 @@ function Sheet({
         )}
 
         {!isLoading && tab === 'search' && !searchQuery && (
-          <p className="text-zinc-500 text-sm text-center py-12">
+          <p className="text-zinc-500 text-base text-center py-12">
             Type to search Spotify
           </p>
         )}
 
         {!isLoading && tracks.length === 0 && (tab === 'library' || searchQuery) && (
-          <p className="text-zinc-500 text-sm text-center py-12">
+          <p className="text-zinc-500 text-base text-center py-12">
             {tab === 'library' ? 'No saved tracks found.' : 'No results.'}
           </p>
         )}
@@ -247,22 +247,22 @@ function TrackRow({
         )}
 
         <div className="flex-1 min-w-0">
-          <p className="text-white text-sm font-medium truncate">{track.name}</p>
-          <p className="text-zinc-400 text-xs truncate">{artistNames}</p>
+          <p className="text-white text-base font-medium truncate">{track.name}</p>
+          <p className="text-zinc-400 text-sm truncate">{artistNames}</p>
         </div>
 
         {/* Current tag badge or expand button */}
         {currentTag ? (
           <button
             onClick={() => setExpanded((v) => !v)}
-            className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-medium ${CUE_BTN[currentTag]}`}
+            className={`shrink-0 rounded-full border px-2.5 py-0.5 text-sm font-medium ${CUE_BTN[currentTag]}`}
           >
             {currentTag}
           </button>
         ) : (
           <button
             onClick={() => setExpanded((v) => !v)}
-            className="shrink-0 rounded-full border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-2.5 py-0.5 text-xs font-medium transition-colors"
+            className="shrink-0 rounded-full border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-2.5 py-0.5 text-sm font-medium transition-colors"
           >
             Tag
           </button>
@@ -276,13 +276,13 @@ function TrackRow({
             <button
               key={cue}
               onClick={() => handleTag(cue)}
-              className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors
+              className={`rounded-full border px-3 py-1 text-sm font-medium transition-colors
                 ${currentTag === cue ? CUE_SELECTED[cue] : CUE_BTN[cue]}`}
             >
               {currentTag === cue ? '✓ ' : ''}{cue}
             </button>
           ))}
-          <button onClick={() => setExpanded(false)} className="text-zinc-500 text-xs px-1">
+          <button onClick={() => setExpanded(false)} className="text-zinc-500 text-sm px-1">
             cancel
           </button>
         </div>

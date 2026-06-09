@@ -172,9 +172,9 @@ function SegmentedTrackBar({
     <div
       ref={barRef}
       onClick={handleClick}
-      // 20 px tall hit area; visual bar is 4 px centered inside it
+      // 28 px tall hit area; visual bar is 8 px centered inside it
       className="relative w-full cursor-pointer select-none"
-      style={{ height: '20px' }}
+      style={{ height: '28px' }}
       aria-label="Seek in track"
       role="slider"
       aria-valuenow={positionMs}
@@ -184,22 +184,22 @@ function SegmentedTrackBar({
       {/* Coloured segment background */}
       <div
         className="absolute left-0 right-0 rounded-sm"
-        style={{ top: '8px', height: '4px', background: gradient }}
+        style={{ top: '10px', height: '8px', background: gradient }}
       />
 
       {/* Future dimmer — everything right of the playhead */}
       <div
         className="absolute right-0 rounded-r-sm bg-black/60"
-        style={{ top: '8px', height: '4px', left: `${progress * 100}%` }}
+        style={{ top: '10px', height: '8px', left: `${progress * 100}%` }}
       />
 
       {/* Playhead dot */}
       <div
         className="absolute bg-white rounded-full shadow"
         style={{
-          top: '5px',
-          width: '10px',
-          height: '10px',
+          top: '6px',
+          width: '16px',
+          height: '16px',
           left: `${progress * 100}%`,
           transform: 'translateX(-50%)',
           pointerEvents: 'none',
@@ -431,7 +431,7 @@ export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
           onSeek={handleSeek}
         />
 
-        <div className="max-w-lg mx-auto px-4 pt-2 pb-3 space-y-2">
+        <div className="max-w-lg mx-auto px-4 pt-4 pb-5 space-y-3">
 
           {/* Active mark note — shown when playhead is inside a sequence */}
           {status === 'ready' && activeSeq?.note && (
@@ -439,7 +439,7 @@ export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
               className="pl-2.5 border-l-2"
               style={{ borderColor: activeColour ?? undefined }}
             >
-              <p className="text-xs text-zinc-300 leading-snug whitespace-pre-wrap">
+              <p className="text-base text-zinc-300 leading-snug whitespace-pre-wrap">
                 {activeSeq.note}
               </p>
             </div>
@@ -447,15 +447,15 @@ export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
 
           {/* Status messages */}
           {status === 'loading' && (
-            <p className="text-zinc-600 text-xs text-center py-1">Loading Spotify player…</p>
+            <p className="text-zinc-600 text-sm text-center py-1">Loading Spotify player…</p>
           )}
           {status === 'initialising' && (
-            <p className="text-zinc-600 text-xs text-center py-1 animate-pulse">
+            <p className="text-zinc-600 text-sm text-center py-1 animate-pulse">
               Connecting to Spotify…
             </p>
           )}
           {status === 'error' && (
-            <p className="text-red-400 text-xs text-center py-1">{statusMsg}</p>
+            <p className="text-red-400 text-sm text-center py-1">{statusMsg}</p>
           )}
 
           {/* Player controls */}
@@ -464,10 +464,10 @@ export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
 
               {/* Song info */}
               <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-medium truncate leading-snug">
+                <p className="text-white text-base font-medium truncate leading-snug">
                   {currentSong.title}
                 </p>
-                <p className="text-zinc-500 text-xs truncate">
+                <p className="text-zinc-500 text-sm truncate">
                   {currentSong.artist}
                   {playback && (
                     <span className="ml-2 tabular-nums text-zinc-600">
@@ -478,7 +478,7 @@ export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
               </div>
 
               {/* Queue position */}
-              <span className="text-zinc-700 text-xs tabular-nums shrink-0">
+              <span className="text-zinc-700 text-sm tabular-nums shrink-0">
                 {currentIndex + 1} / {songs.length}
               </span>
 

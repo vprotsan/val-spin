@@ -200,16 +200,16 @@ export default function SpotifyPlayer({ tracks }: { tracks: SpotifyTrack[] }) {
         <div className="fixed bottom-0 left-0 right-0 z-20 bg-zinc-950 border-t border-zinc-800 px-4 py-3">
           <div className="max-w-lg mx-auto">
             {status === 'loading' && (
-              <p className="text-zinc-500 text-sm text-center py-1">Loading Spotify player…</p>
+              <p className="text-zinc-500 text-base text-center py-1">Loading Spotify player…</p>
             )}
             {status === 'initialising' && (
-              <p className="text-zinc-500 text-sm text-center py-1 animate-pulse">Connecting to Spotify…</p>
+              <p className="text-zinc-500 text-base text-center py-1 animate-pulse">Connecting to Spotify…</p>
             )}
             {status === 'error' && (
-              <p className="text-red-400 text-sm text-center py-1">{statusMsg}</p>
+              <p className="text-red-400 text-base text-center py-1">{statusMsg}</p>
             )}
             {status === 'ready' && !playback && (
-              <p className="text-zinc-500 text-sm text-center py-1">Tap a track to play</p>
+              <p className="text-zinc-500 text-base text-center py-1">Tap a track to play</p>
             )}
             {status === 'ready' && playback && currentTrack && (
               <NowPlayingBar
@@ -223,8 +223,8 @@ export default function SpotifyPlayer({ tracks }: { tracks: SpotifyTrack[] }) {
 
         {/* ── Track list ── */}
         <div className="max-w-lg mx-auto px-4 pt-6">
-          <h1 className="text-xl font-bold text-white mb-1">Player</h1>
-          <p className="text-zinc-500 text-xs mb-5">
+          <h1 className="text-2xl font-bold text-white mb-1">Player</h1>
+          <p className="text-zinc-500 text-sm mb-5">
             Tap a track to play it in this browser via Spotify Premium.
           </p>
 
@@ -300,13 +300,13 @@ function TrackRow({
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className={`text-sm font-medium truncate ${isSelected ? 'text-[#1DB954]' : 'text-white'}`}>
+          <p className={`text-base font-medium truncate ${isSelected ? 'text-[#1DB954]' : 'text-white'}`}>
             {track.name}
           </p>
-          <p className="text-zinc-400 text-xs truncate">{artistNames}</p>
+          <p className="text-zinc-400 text-sm truncate">{artistNames}</p>
         </div>
 
-        <span className="text-zinc-600 text-xs shrink-0 tabular-nums">
+        <span className="text-zinc-600 text-sm shrink-0 tabular-nums">
           {formatMs(track.duration_ms)}
         </span>
       </button>
@@ -343,8 +343,8 @@ function NowPlayingBar({
           <img src={thumb} alt={track.album.name} className="w-10 h-10 rounded object-cover shrink-0" />
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-white text-sm font-medium truncate">{track.name}</p>
-          <p className="text-zinc-400 text-xs tabular-nums">
+          <p className="text-white text-base font-medium truncate">{track.name}</p>
+          <p className="text-zinc-400 text-sm tabular-nums">
             {formatMs(playback.positionMs)} / {formatMs(playback.durationMs)}
           </p>
         </div>

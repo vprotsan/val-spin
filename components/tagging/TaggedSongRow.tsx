@@ -36,14 +36,14 @@ export default function TaggedSongRow({ song }: { song: Song }) {
       {/* Main row */}
       <div className="flex items-center gap-3 py-3 border-b border-zinc-800/60">
         {/* Placeholder art */}
-        <div className="w-11 h-11 rounded bg-zinc-800 shrink-0 flex items-center justify-center text-zinc-600 text-xs">
+        <div className="w-11 h-11 rounded bg-zinc-800 shrink-0 flex items-center justify-center text-zinc-600 text-sm">
           ♪
         </div>
 
         {/* Info — tap to open sequence editor */}
         <Link href={`/songs/${song.id}`} className="flex-1 min-w-0 group">
-          <p className="text-white text-sm font-medium truncate group-hover:text-zinc-200">{song.title}</p>
-          <p className="text-zinc-400 text-xs truncate">
+          <p className="text-white text-base font-medium truncate group-hover:text-zinc-200">{song.title}</p>
+          <p className="text-zinc-400 text-sm truncate">
             {song.artist}
             {song.sequences.length > 0 && (
               <span className="ml-2 text-zinc-600">
@@ -56,7 +56,7 @@ export default function TaggedSongRow({ song }: { song: Song }) {
         {/* Cue pill — tap to reassign */}
         <button
           onClick={() => setShowCuePicker((v) => !v)}
-          className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-opacity
+          className={`shrink-0 rounded-full border px-2.5 py-0.5 text-sm font-medium transition-opacity
             ${CUE_PILL[song.cue]} hover:opacity-80`}
         >
           {song.cue}
@@ -66,7 +66,7 @@ export default function TaggedSongRow({ song }: { song: Song }) {
         <button
           onClick={handleUntag}
           disabled={isPending}
-          className="shrink-0 text-zinc-600 hover:text-red-400 transition-colors px-1 text-lg leading-none"
+          className="shrink-0 text-zinc-600 hover:text-red-400 transition-colors px-1 text-xl leading-none"
           aria-label="Remove tag"
         >
           ×
@@ -80,14 +80,14 @@ export default function TaggedSongRow({ song }: { song: Song }) {
             <button
               key={cue}
               onClick={() => handleChangeCue(cue)}
-              className={`rounded-full border px-3 py-1 text-xs font-medium ${CUE_PILL[cue]}`}
+              className={`rounded-full border px-3 py-1 text-sm font-medium ${CUE_PILL[cue]}`}
             >
               → {cue}
             </button>
           ))}
           <button
             onClick={() => setShowCuePicker(false)}
-            className="text-zinc-500 text-xs px-1"
+            className="text-zinc-500 text-sm px-1"
           >
             cancel
           </button>

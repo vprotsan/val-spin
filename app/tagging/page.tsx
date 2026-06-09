@@ -45,12 +45,12 @@ export default async function TaggingPage({
       <header className="sticky top-0 z-10 bg-black/90 backdrop-blur-sm border-b border-zinc-800 px-4 pt-5 pb-4">
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-white">Song Tags</h1>
-            <p className="text-zinc-500 text-xs mt-0.5">
+            <h1 className="text-2xl font-bold text-white">Song Tags</h1>
+            <p className="text-zinc-500 text-sm mt-0.5">
               {allSongs.length} {allSongs.length === 1 ? 'song' : 'songs'} tagged
             </p>
           </div>
-          <Link href="/dashboard" className="text-zinc-400 hover:text-white text-sm transition-colors">
+          <Link href="/dashboard" className="text-zinc-400 hover:text-white text-base transition-colors">
             ← Back
           </Link>
         </div>
@@ -65,12 +65,12 @@ export default async function TaggingPage({
 
         {/* Tagged songs for the selected cue */}
         <section>
-          <h2 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-1">
+          <h2 className="text-zinc-400 text-sm font-semibold uppercase tracking-widest mb-1">
             {selectedCue} — {taggedForCue.length} {taggedForCue.length === 1 ? 'song' : 'songs'}
           </h2>
 
           {taggedForCue.length === 0 ? (
-            <p className="text-zinc-600 text-sm py-8 text-center">
+            <p className="text-zinc-600 text-base py-8 text-center">
               No songs tagged as {selectedCue} yet.
               <br />
               <span className="text-zinc-700">Tap &ldquo;Add Song&rdquo; to get started.</span>

@@ -61,7 +61,7 @@ export default function PlaylistListClient({
     <div className="space-y-3">
       {/* Playlist cards */}
       {playlists.length === 0 && !showCreate && (
-        <p className="text-zinc-600 text-sm text-center py-12">
+        <p className="text-zinc-600 text-base text-center py-12">
           No class playlists yet. Create one to get started.
         </p>
       )}
@@ -88,15 +88,15 @@ export default function PlaylistListClient({
 
               {/* Meta */}
               <div className="flex-1 min-w-0">
-                <p className="text-white font-medium text-sm truncate">{pl.name}</p>
-                <p className="text-zinc-500 text-xs mt-0.5">
+                <p className="text-white font-medium text-base truncate">{pl.name}</p>
+                <p className="text-zinc-500 text-sm mt-0.5">
                   {pl.segments.length} {pl.segments.length === 1 ? 'segment' : 'segments'}
                   {songs > 0 && <> &middot; {songs} {songs === 1 ? 'song' : 'songs'}</>}
                   <span className="ml-2 text-zinc-700">{fmtDate(pl.updated_at)}</span>
                 </p>
               </div>
 
-              <span className="text-zinc-600 group-hover:text-zinc-400 transition-colors text-lg shrink-0">→</span>
+              <span className="text-zinc-600 group-hover:text-zinc-400 transition-colors text-xl shrink-0">→</span>
             </button>
 
             {/* Delete */}
@@ -104,7 +104,7 @@ export default function PlaylistListClient({
               <button
                 onClick={() => handleDelete(pl.id, pl.name)}
                 disabled={isDeleting || isPending}
-                className="text-zinc-700 hover:text-red-500 text-xs transition-colors"
+                className="text-zinc-700 hover:text-red-500 text-sm transition-colors"
               >
                 {isDeleting ? 'Deleting…' : 'Delete'}
               </button>
@@ -116,7 +116,7 @@ export default function PlaylistListClient({
       {/* Create new */}
       {showCreate ? (
         <div className="rounded-2xl border border-zinc-700 bg-zinc-900 p-4 space-y-3">
-          <p className="text-zinc-400 text-sm font-medium">New class playlist</p>
+          <p className="text-zinc-400 text-base font-medium">New class playlist</p>
           <input
             autoFocus
             type="text"
@@ -124,19 +124,19 @@ export default function PlaylistListClient({
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleCreate(); if (e.key === 'Escape') setShowCreate(false); }}
             placeholder="e.g. Tuesday Climb Ride"
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm placeholder:text-zinc-600 outline-none focus:border-zinc-500"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-base placeholder:text-zinc-600 outline-none focus:border-zinc-500"
           />
           <div className="flex gap-2">
             <button
               onClick={handleCreate}
               disabled={!newName.trim() || isPending}
-              className="flex-1 rounded-xl bg-white text-black text-sm font-semibold py-2.5 disabled:opacity-40 transition-opacity"
+              className="flex-1 rounded-xl bg-white text-black text-base font-semibold py-2.5 disabled:opacity-40 transition-opacity"
             >
               {isPending ? 'Creating…' : 'Create & Open'}
             </button>
             <button
               onClick={() => { setShowCreate(false); setNewName(''); }}
-              className="px-4 rounded-xl bg-zinc-800 text-zinc-400 text-sm"
+              className="px-4 rounded-xl bg-zinc-800 text-zinc-400 text-base"
             >
               Cancel
             </button>
@@ -145,9 +145,9 @@ export default function PlaylistListClient({
       ) : (
         <button
           onClick={() => setShowCreate(true)}
-          className="w-full rounded-2xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 py-4 text-zinc-400 hover:text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
+          className="w-full rounded-2xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 py-4 text-zinc-400 hover:text-white text-base font-medium transition-colors flex items-center justify-center gap-2"
         >
-          <span className="text-lg leading-none">+</span> New Class Playlist
+          <span className="text-xl leading-none">+</span> New Class Playlist
         </button>
       )}
     </div>

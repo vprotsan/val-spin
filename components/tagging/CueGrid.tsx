@@ -34,9 +34,9 @@ export default function CueGrid({
               ${cue === 'Flat' ? 'col-span-2 sm:col-span-1' : ''}
             `}
           >
-            <span className="text-2xl leading-none">{meta.emoji}</span>
-            <span className="text-sm font-semibold tracking-wide">{cue}</span>
-            <span className={`text-xs font-medium ${isSelected ? 'opacity-70' : 'opacity-50'}`}>
+            <span className="text-3xl leading-none">{meta.emoji}</span>
+            <span className="text-base font-semibold tracking-wide">{cue}</span>
+            <span className={`text-sm font-medium ${isSelected ? 'opacity-70' : 'opacity-50'}`}>
               {count} {count === 1 ? 'song' : 'songs'}
             </span>
           </Link>

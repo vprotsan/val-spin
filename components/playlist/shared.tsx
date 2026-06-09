@@ -55,7 +55,7 @@ export function MoveBtn({
       aria-label={label}
       onClick={onClick}
       disabled={disabled}
-      className={`w-7 h-6 flex items-center justify-center rounded text-xs transition-colors
+      className={`w-7 h-6 flex items-center justify-center rounded text-sm transition-colors
         ${disabled
           ? 'text-zinc-800 cursor-not-allowed'
           : 'text-zinc-400 hover:text-white hover:bg-zinc-700/60 active:scale-95'
@@ -83,11 +83,11 @@ export function SongPicker({
   if (songs.length === 0) {
     return (
       <div className="py-2 text-center">
-        <p className="text-zinc-500 text-xs">
+        <p className="text-zinc-500 text-sm">
           No songs tagged with this cue yet.{' '}
           <a href="/tagging" className="text-zinc-400 underline">Tag songs →</a>
         </p>
-        <button onClick={onClose} className="text-zinc-600 text-xs mt-1">cancel</button>
+        <button onClick={onClose} className="text-zinc-600 text-sm mt-1">cancel</button>
       </div>
     );
   }
@@ -102,21 +102,21 @@ export function SongPicker({
             className="w-full flex items-center gap-3 px-3 py-2.5 border-b border-zinc-800/60 last:border-0 text-left hover:bg-zinc-800/60 active:bg-zinc-800 transition-colors"
           >
             <div className="flex-1 min-w-0">
-              <p className="text-white text-sm truncate">{song.title}</p>
-              <p className="text-zinc-400 text-xs truncate">{song.artist}</p>
+              <p className="text-white text-base truncate">{song.title}</p>
+              <p className="text-zinc-400 text-sm truncate">{song.artist}</p>
             </div>
-            <span className="text-zinc-600 text-xs tabular-nums shrink-0">
+            <span className="text-zinc-600 text-sm tabular-nums shrink-0">
               {fmtMs(song.durationMs)}
             </span>
             {inSegmentIds.has(song.id) && (
-              <span className="text-zinc-600 text-xs shrink-0">+1</span>
+              <span className="text-zinc-600 text-sm shrink-0">+1</span>
             )}
           </button>
         ))}
       </div>
       <button
         onClick={onClose}
-        className="w-full text-center text-zinc-500 text-xs py-2 hover:text-zinc-300 border-t border-zinc-800"
+        className="w-full text-center text-zinc-500 text-sm py-2 hover:text-zinc-300 border-t border-zinc-800"
       >
         cancel
       </button>
@@ -136,6 +136,7 @@ export function SegmentCard({
   onAddSong,
   onRemoveSong,
   onMoveSong,
+  isEditing = true, // default true keeps existing PlaylistBuilder callers unchanged
 }: {
   segment: Segment;
   segIdx: number;
@@ -146,38 +147,53 @@ export function SegmentCard({
   onAddSong: (segId: string, songId: string) => void;
   onRemoveSong: (segId: string, songId: string, idx: number) => void;
   onMoveSong: (segId: string, idx: number, dir: 'up' | 'down') => void;
+  isEditing?: boolean;
 }) {
   const [showPicker, setShowPicker] = useState(false);
   const duration = segDuration(segment);
   const inSegmentIds = new Set(segment.songs.map((s) => s.id));
 
+  // Close the picker if we leave edit mode while it's open
+  if (!isEditing && showPicker) setShowPicker(false);
+
   return (
     <div className={`rounded-2xl border overflow-hidden ${CUE_HEADER[segment.cue]}`}>
       {/* Segment header */}
       <div className={`flex items-center gap-1 px-3 py-3 border-b ${CUE_HEADER[segment.cue]}`}>
-        <div className="flex flex-col gap-0.5 shrink-0">
-          <MoveBtn
-            label="Move segment up"
-            disabled={segIdx === 0}
-            onClick={() => onMoveSegment(segment.id, 'up')}
-          >▲</MoveBtn>
-          <MoveBtn
-            label="Move segment down"
-            disabled={segIdx === totalSegments - 1}
-            onClick={() => onMoveSegment(segment.id, 'down')}
-          >▼</MoveBtn>
-        </div>
-        <span className="flex-1 font-bold text-sm tracking-wide ml-1">{segment.cue}</span>
-        {duration > 0 && (
-          <span className="text-xs font-medium opacity-70 tabular-nums">{fmtMs(duration)}</span>
+        {/* Reorder arrows — edit mode only */}
+        {isEditing && (
+          <div className="flex flex-col gap-0.5 shrink-0">
+            <MoveBtn
+              label="Move segment up"
+              disabled={segIdx === 0}
+              onClick={() => onMoveSegment(segment.id, 'up')}
+            >▲</MoveBtn>
+            <MoveBtn
+              label="Move segment down"
+              disabled={segIdx === totalSegments - 1}
+              onClick={() => onMoveSegment(segment.id, 'down')}
+            >▼</MoveBtn>
+          </div>
         )}
-        <button
-          onClick={() => onRemoveSegment(segment.id)}
-          className="ml-2 shrink-0 opacity-40 hover:opacity-80 text-xl leading-none transition-opacity"
-          aria-label="Remove segment"
-        >
-          ×
-        </button>
+
+        <span className={`flex-1 font-bold text-base tracking-wide ${isEditing ? 'ml-1' : ''}`}>
+          {segment.cue}
+        </span>
+
+        {duration > 0 && (
+          <span className="text-sm font-medium opacity-70 tabular-nums">{fmtMs(duration)}</span>
+        )}
+
+        {/* Delete button — edit mode only */}
+        {isEditing && (
+          <button
+            onClick={() => onRemoveSegment(segment.id)}
+            className="ml-2 shrink-0 opacity-40 hover:opacity-80 text-2xl leading-none transition-opacity"
+            aria-label="Remove segment"
+          >
+            ×
+          </button>
+        )}
       </div>
 
       {/* Songs */}
@@ -185,26 +201,28 @@ export function SegmentCard({
         {segment.songs.map((song, songIdx) => (
           <div
             key={`${song.id}-${songIdx}`}
-            className="flex items-start gap-1 px-3 py-2.5 border-b border-zinc-800/60 last:border-0"
+            className={`flex items-start px-3 py-2.5 border-b border-zinc-800/60 last:border-0 ${isEditing ? 'gap-1' : ''}`}
           >
-            {/* Up/down for song */}
-            <div className="flex flex-col gap-0.5 shrink-0 mt-0.5">
-              <MoveBtn
-                label="Move song up"
-                disabled={songIdx === 0}
-                onClick={() => onMoveSong(segment.id, songIdx, 'up')}
-              >▲</MoveBtn>
-              <MoveBtn
-                label="Move song down"
-                disabled={songIdx === segment.songs.length - 1}
-                onClick={() => onMoveSong(segment.id, songIdx, 'down')}
-              >▼</MoveBtn>
-            </div>
+            {/* Reorder arrows — edit mode only */}
+            {isEditing && (
+              <div className="flex flex-col gap-0.5 shrink-0 mt-0.5">
+                <MoveBtn
+                  label="Move song up"
+                  disabled={songIdx === 0}
+                  onClick={() => onMoveSong(segment.id, songIdx, 'up')}
+                >▲</MoveBtn>
+                <MoveBtn
+                  label="Move song down"
+                  disabled={songIdx === segment.songs.length - 1}
+                  onClick={() => onMoveSong(segment.id, songIdx, 'down')}
+                >▼</MoveBtn>
+              </div>
+            )}
 
             {/* Song info + in-track sequences */}
-            <div className="flex-1 min-w-0 ml-1">
-              <p className="text-white text-sm font-medium truncate">{song.title}</p>
-              <p className="text-zinc-400 text-xs truncate">
+            <div className={`flex-1 min-w-0 ${isEditing ? 'ml-1' : ''}`}>
+              <p className="text-white text-base font-medium truncate">{song.title}</p>
+              <p className="text-zinc-400 text-sm truncate">
                 {song.artist}
                 <span className="text-zinc-600 ml-2 tabular-nums">{fmtMs(song.durationMs)}</span>
               </p>
@@ -217,7 +235,7 @@ export function SegmentCard({
                     const mm = Math.floor(durSec / 60);
                     const ss = String(durSec % 60).padStart(2, '0');
                     return (
-                      <p key={seq.id} className="text-zinc-600 text-xs tabular-nums leading-snug">
+                      <p key={seq.id} className="text-zinc-600 text-sm tabular-nums leading-snug">
                         {fmtMs(seq.startMs)}–{fmtMs(seq.endMs)}
                         <span className="text-zinc-700 mx-1">·</span>
                         {mm}:{ss}
@@ -231,40 +249,44 @@ export function SegmentCard({
               )}
             </div>
 
-            {/* Remove */}
-            <button
-              onClick={() => onRemoveSong(segment.id, song.id, songIdx)}
-              className="shrink-0 text-zinc-600 hover:text-red-400 transition-colors text-xl leading-none px-1 mt-0.5"
-              aria-label="Remove song"
-            >
-              ×
-            </button>
+            {/* Delete button — edit mode only */}
+            {isEditing && (
+              <button
+                onClick={() => onRemoveSong(segment.id, song.id, songIdx)}
+                className="shrink-0 text-zinc-600 hover:text-red-400 transition-colors text-2xl leading-none px-1 mt-0.5"
+                aria-label="Remove song"
+              >
+                ×
+              </button>
+            )}
           </div>
         ))}
 
         {segment.songs.length === 0 && (
-          <p className="text-zinc-600 text-xs px-4 py-3">No songs yet.</p>
+          <p className="text-zinc-600 text-sm px-4 py-3">No songs yet.</p>
         )}
 
-        {/* Add song */}
-        <div className="px-3 py-2">
-          {showPicker ? (
-            <SongPicker
-              segmentId={segment.id}
-              songs={availableSongs}
-              inSegmentIds={inSegmentIds}
-              onPick={(songId) => { onAddSong(segment.id, songId); setShowPicker(false); }}
-              onClose={() => setShowPicker(false)}
-            />
-          ) : (
-            <button
-              onClick={() => setShowPicker(true)}
-              className="w-full text-center text-xs text-zinc-500 hover:text-zinc-300 py-1 transition-colors"
-            >
-              + Add Song
-            </button>
-          )}
-        </div>
+        {/* Add song row — edit mode only */}
+        {isEditing && (
+          <div className="px-3 py-2">
+            {showPicker ? (
+              <SongPicker
+                segmentId={segment.id}
+                songs={availableSongs}
+                inSegmentIds={inSegmentIds}
+                onPick={(songId) => { onAddSong(segment.id, songId); setShowPicker(false); }}
+                onClose={() => setShowPicker(false)}
+              />
+            ) : (
+              <button
+                onClick={() => setShowPicker(true)}
+                className="w-full text-center text-sm text-zinc-500 hover:text-zinc-300 py-1 transition-colors"
+              >
+                + Add Song
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

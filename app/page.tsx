@@ -16,17 +16,17 @@ export default async function LoginPage({
       <div className="w-full max-w-sm flex flex-col items-center gap-8">
         {/* Logo / heading */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-white tracking-tight">
+          <h1 className="text-4xl font-bold text-white tracking-tight">
             Cycling Playlist
           </h1>
-          <p className="mt-2 text-zinc-400 text-sm">
+          <p className="mt-2 text-zinc-400 text-base">
             Build cue-based playlists for your indoor cycling class.
           </p>
         </div>
 
         {/* Error banner */}
         {error && (
-          <div className="w-full rounded-lg bg-red-900/50 border border-red-700 px-4 py-3 text-sm text-red-200">
+          <div className="w-full rounded-lg bg-red-900/50 border border-red-700 px-4 py-3 text-base text-red-200">
             {friendlyError(error)}
           </div>
         )}
@@ -34,7 +34,7 @@ export default async function LoginPage({
         {/* Login button */}
         <a
           href="/api/auth/login"
-          className="w-full flex items-center justify-center gap-3 rounded-full bg-[#1DB954] hover:bg-[#1ed760] active:scale-95 transition-all px-6 py-4 text-black font-semibold text-base"
+          className="w-full flex items-center justify-center gap-3 rounded-full bg-[#1DB954] hover:bg-[#1ed760] active:scale-95 transition-all px-6 py-4 text-black font-semibold text-xl"
         >
           {/* Spotify logo mark */}
           <svg viewBox="0 0 24 24" className="w-6 h-6 shrink-0" fill="currentColor">
@@ -43,7 +43,7 @@ export default async function LoginPage({
           Connect to Spotify
         </a>
 
-        <p className="text-zinc-600 text-xs text-center">
+        <p className="text-zinc-600 text-sm text-center">
           Spotify Premium required for full playback.
         </p>
       </div>

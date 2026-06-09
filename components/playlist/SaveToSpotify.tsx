@@ -38,10 +38,10 @@ export default function SaveToSpotify({ totalTracks }: { totalTracks: number }) 
     return (
       <div className="rounded-2xl border border-emerald-700/50 bg-emerald-950/40 p-5 space-y-3">
         <div className="flex items-start gap-3">
-          <span className="text-2xl shrink-0">✓</span>
+          <span className="text-3xl shrink-0">✓</span>
           <div>
             <p className="text-white font-semibold">Saved to Spotify</p>
-            <p className="text-emerald-300 text-sm mt-0.5">
+            <p className="text-emerald-300 text-base mt-0.5">
               &ldquo;{state.name}&rdquo; &middot; {state.trackCount}{' '}
               {state.trackCount === 1 ? 'track' : 'tracks'}
             </p>
@@ -51,7 +51,7 @@ export default function SaveToSpotify({ totalTracks }: { totalTracks: number }) 
           href={state.playlistUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full rounded-full bg-[#1DB954] hover:bg-[#1ed760] active:scale-95 transition-all py-3 text-black font-semibold text-sm"
+          className="flex items-center justify-center gap-2 w-full rounded-full bg-[#1DB954] hover:bg-[#1ed760] active:scale-95 transition-all py-3 text-black font-semibold text-base"
         >
           {/* Spotify logo */}
           <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0" fill="currentColor">
@@ -61,7 +61,7 @@ export default function SaveToSpotify({ totalTracks }: { totalTracks: number }) 
         </a>
         <button
           onClick={() => setState({ status: 'idle' })}
-          className="w-full text-center text-zinc-500 text-xs hover:text-zinc-400 transition-colors"
+          className="w-full text-center text-zinc-500 text-sm hover:text-zinc-400 transition-colors"
         >
           Save another version
         </button>
@@ -72,10 +72,10 @@ export default function SaveToSpotify({ totalTracks }: { totalTracks: number }) 
   // ── Idle / error / saving ──────────────────────────────────────────────────
   return (
     <div className="rounded-2xl border border-zinc-700 bg-zinc-900 p-4 space-y-3">
-      <p className="text-zinc-300 text-sm font-medium">Save to Spotify</p>
+      <p className="text-zinc-300 text-base font-medium">Save to Spotify</p>
 
       {totalTracks === 0 && (
-        <p className="text-zinc-500 text-xs">
+        <p className="text-zinc-500 text-sm">
           Add songs to your segments before saving.
         </p>
       )}
@@ -92,19 +92,19 @@ export default function SaveToSpotify({ totalTracks }: { totalTracks: number }) 
         placeholder="Playlist name…"
         maxLength={100}
         disabled={isBusy}
-        className="w-full rounded-xl bg-zinc-800 border border-zinc-700 focus:border-zinc-500 text-white placeholder-zinc-500 px-4 py-2.5 text-sm outline-none disabled:opacity-50 transition-colors"
+        className="w-full rounded-xl bg-zinc-800 border border-zinc-700 focus:border-zinc-500 text-white placeholder-zinc-500 px-4 py-2.5 text-base outline-none disabled:opacity-50 transition-colors"
       />
 
       {/* Error */}
       {state.status === 'error' && (
-        <p className="text-red-400 text-xs leading-snug">{state.message}</p>
+        <p className="text-red-400 text-sm leading-snug">{state.message}</p>
       )}
 
       {/* Save button */}
       <button
         onClick={handleSave}
         disabled={isBusy || totalTracks === 0}
-        className="w-full flex items-center justify-center gap-2 rounded-full bg-[#1DB954] hover:bg-[#1ed760] active:scale-95 transition-all py-3.5 text-black font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full flex items-center justify-center gap-2 rounded-full bg-[#1DB954] hover:bg-[#1ed760] active:scale-95 transition-all py-3.5 text-black font-semibold text-base disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {isBusy ? (
           <>
@@ -121,7 +121,7 @@ export default function SaveToSpotify({ totalTracks }: { totalTracks: number }) 
         )}
       </button>
 
-      <p className="text-zinc-600 text-xs text-center">
+      <p className="text-zinc-600 text-sm text-center">
         {totalTracks} {totalTracks === 1 ? 'track' : 'tracks'} &middot; saves as a private playlist
       </p>
     </div>

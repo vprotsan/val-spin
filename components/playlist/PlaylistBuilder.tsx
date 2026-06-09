@@ -109,7 +109,7 @@ export default function PlaylistBuilder({
   return (
     <div className={`space-y-4 transition-opacity ${isPending ? 'opacity-70' : ''}`}>
       {/* Summary */}
-      <p className="text-zinc-500 text-xs">
+      <p className="text-zinc-500 text-sm">
         {segments.length} {segments.length === 1 ? 'segment' : 'segments'}
         {totalMs > 0 && <> &middot; {fmtMs(totalMs)} total</>}
       </p>
@@ -132,7 +132,7 @@ export default function PlaylistBuilder({
 
       {/* Empty state */}
       {segments.length === 0 && (
-        <p className="text-zinc-600 text-sm text-center py-8">
+        <p className="text-zinc-600 text-base text-center py-8">
           No segments yet. Add one below to start building your class.
         </p>
       )}
@@ -140,13 +140,13 @@ export default function PlaylistBuilder({
       {/* Add segment */}
       {addingCuePicker ? (
         <div className="rounded-2xl border border-zinc-700 bg-zinc-900 p-4 space-y-3">
-          <p className="text-zinc-400 text-sm font-medium">Choose a cue for this segment:</p>
+          <p className="text-zinc-400 text-base font-medium">Choose a cue for this segment:</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
             {CUE_TYPES.map((cue) => (
               <button
                 key={cue}
                 onClick={() => handleAddSegment(cue)}
-                className={`rounded-xl border py-3 text-sm font-semibold transition-all active:scale-95 ${CUE_BTN[cue]}`}
+                className={`rounded-xl border py-3 text-base font-semibold transition-all active:scale-95 ${CUE_BTN[cue]}`}
               >
                 {cue}
               </button>
@@ -154,7 +154,7 @@ export default function PlaylistBuilder({
           </div>
           <button
             onClick={() => setAddingCuePicker(false)}
-            className="text-zinc-500 text-xs w-full text-center pt-1"
+            className="text-zinc-500 text-sm w-full text-center pt-1"
           >
             cancel
           </button>
@@ -162,9 +162,9 @@ export default function PlaylistBuilder({
       ) : (
         <button
           onClick={() => setAddingCuePicker(true)}
-          className="w-full rounded-2xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 py-4 text-zinc-400 hover:text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
+          className="w-full rounded-2xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 py-4 text-zinc-400 hover:text-white text-base font-medium transition-colors flex items-center justify-center gap-2"
         >
-          <span className="text-lg leading-none">+</span> Add Segment
+          <span className="text-xl leading-none">+</span> Add Segment
         </button>
       )}
 

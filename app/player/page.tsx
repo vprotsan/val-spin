@@ -14,7 +14,7 @@ export default async function PlayerPage() {
   return (
     <div>
       <div className="max-w-lg mx-auto px-4 pt-4 pb-2 flex items-center justify-between">
-        <Link href="/dashboard" className="text-zinc-400 hover:text-white text-sm transition-colors">
+        <Link href="/dashboard" className="text-zinc-400 hover:text-white text-base transition-colors">
           ← Back
         </Link>
       </div>

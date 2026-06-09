@@ -254,24 +254,24 @@ export default function SequenceEditor({ song }: { song: Song }) {
         {/* Header */}
         <header className="sticky top-0 z-10 bg-black/90 backdrop-blur-sm border-b border-zinc-800 px-4 pt-4 pb-3">
           <div className="max-w-lg mx-auto">
-            <Link href="/tagging" className="text-zinc-400 hover:text-white text-sm transition-colors">
+            <Link href="/tagging" className="text-zinc-400 hover:text-white text-base transition-colors">
               ← Back
             </Link>
-            <h1 className="text-white font-bold text-lg mt-1 truncate">{song.title}</h1>
-            <p className="text-zinc-400 text-sm truncate">{song.artist}</p>
+            <h1 className="text-white font-bold text-xl mt-1 truncate">{song.title}</h1>
+            <p className="text-zinc-400 text-base truncate">{song.artist}</p>
           </div>
         </header>
 
         {/* Player status */}
         <div className="max-w-lg mx-auto px-4 pt-4 space-y-4">
           {playerStatus === 'loading' && (
-            <p className="text-zinc-500 text-sm animate-pulse">Loading Spotify player…</p>
+            <p className="text-zinc-500 text-base animate-pulse">Loading Spotify player…</p>
           )}
           {playerStatus === 'connecting' && (
-            <p className="text-zinc-500 text-sm animate-pulse">Connecting…</p>
+            <p className="text-zinc-500 text-base animate-pulse">Connecting…</p>
           )}
           {playerStatus === 'error' && (
-            <p className="text-red-400 text-sm bg-red-950/30 rounded-lg px-3 py-2">{playerError}</p>
+            <p className="text-red-400 text-base bg-red-950/30 rounded-lg px-3 py-2">{playerError}</p>
           )}
 
           {/* Progress bar */}
@@ -286,7 +286,7 @@ export default function SequenceEditor({ song }: { song: Song }) {
                 disabled={!isThisSongActive}
                 className="w-full h-1.5 accent-[#1DB954] rounded-full cursor-pointer disabled:opacity-30"
               />
-              <div className="flex justify-between text-xs text-zinc-500 tabular-nums">
+              <div className="flex justify-between text-sm text-zinc-500 tabular-nums">
                 <span>{isThisSongActive && playback ? fmtMs(playback.positionMs) : '0:00'}</span>
                 <span>{fmtMs(song.durationMs)}</span>
               </div>
@@ -316,11 +316,11 @@ export default function SequenceEditor({ song }: { song: Song }) {
 
           {/* Sequence list */}
           <section>
-            <h2 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
+            <h2 className="text-zinc-400 text-sm font-semibold uppercase tracking-widest mb-3">
               Sequences — {sequences.length}
             </h2>
             {sequences.length === 0 && (
-              <p className="text-zinc-600 text-sm py-6 text-center">
+              <p className="text-zinc-600 text-base py-6 text-center">
                 No sequences yet.
                 <br />
                 <span className="text-zinc-700">Play the track and tap Mark Start below.</span>
@@ -356,7 +356,7 @@ export default function SequenceEditor({ song }: { song: Song }) {
         <div className="max-w-lg mx-auto space-y-2">
           {/* Error */}
           {markError && (
-            <p className="text-red-400 text-xs bg-red-950/40 rounded-lg px-3 py-2 text-center">
+            <p className="text-red-400 text-sm bg-red-950/40 rounded-lg px-3 py-2 text-center">
               {markError}
             </p>
           )}
@@ -367,7 +367,7 @@ export default function SequenceEditor({ song }: { song: Song }) {
               onClick={handleMarkStart}
               disabled={playerStatus !== 'ready' || isMarking}
               className={`
-                w-full rounded-2xl py-5 text-center font-bold text-lg tracking-wide transition-all active:scale-[0.98]
+                w-full rounded-2xl py-5 text-center font-bold text-xl tracking-wide transition-all active:scale-[0.98]
                 ${playerStatus === 'ready'
                   ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-900/40'
                   : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'}
@@ -375,7 +375,7 @@ export default function SequenceEditor({ song }: { song: Song }) {
             >
               Mark Start
               {playback && isThisSongActive && (
-                <span className="block text-sm font-normal opacity-70 mt-0.5">
+                <span className="block text-base font-normal opacity-70 mt-0.5">
                   at {fmtMs(playback.positionMs)}
                 </span>
               )}
@@ -384,7 +384,7 @@ export default function SequenceEditor({ song }: { song: Song }) {
             /* Pending start — show note input + Mark End + cancel */
             <div className="space-y-2">
               <div className="flex items-center gap-2 bg-amber-950/40 border border-amber-800/50 rounded-xl px-4 py-2">
-                <span className="text-amber-300 text-sm font-medium shrink-0">
+                <span className="text-amber-300 text-base font-medium shrink-0">
                   Start: {fmtMs(pendingStartMs)}
                 </span>
                 <input
@@ -392,24 +392,24 @@ export default function SequenceEditor({ song }: { song: Song }) {
                   value={pendingNote}
                   onChange={(e) => setPendingNote(e.target.value)}
                   placeholder="Optional note…"
-                  className="flex-1 bg-transparent text-white text-sm placeholder-zinc-600 outline-none"
+                  className="flex-1 bg-transparent text-white text-base placeholder-zinc-600 outline-none"
                 />
               </div>
               <button
                 onClick={handleMarkEnd}
                 disabled={isMarking}
-                className="w-full rounded-2xl py-5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-lg tracking-wide transition-all active:scale-[0.98] shadow-lg shadow-emerald-900/40 disabled:opacity-50"
+                className="w-full rounded-2xl py-5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xl tracking-wide transition-all active:scale-[0.98] shadow-lg shadow-emerald-900/40 disabled:opacity-50"
               >
                 Mark End
                 {playback && isThisSongActive && (
-                  <span className="block text-sm font-normal opacity-70 mt-0.5">
+                  <span className="block text-base font-normal opacity-70 mt-0.5">
                     at {fmtMs(playback.positionMs)}
                   </span>
                 )}
               </button>
               <button
                 onClick={handleCancelMark}
-                className="w-full text-zinc-500 hover:text-zinc-300 text-sm py-1 transition-colors"
+                className="w-full text-zinc-500 hover:text-zinc-300 text-base py-1 transition-colors"
               >
                 Cancel
               </button>
@@ -438,14 +438,14 @@ function SequenceRow({
     <li className="flex items-center gap-3 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3">
       {/* Timestamps — tap to seek */}
       <button onClick={onSeek} className="flex-1 text-left min-w-0">
-        <p className="text-white text-sm font-mono tabular-nums">
+        <p className="text-white text-base font-mono tabular-nums">
           {fmtMs(seq.startMs)}
           <span className="text-zinc-500"> – </span>
           {fmtMs(seq.endMs)}
           <span className="text-zinc-500"> · </span>
           {fmtMs(seq.endMs - seq.startMs)}
         </p>
-        {seq.note && <p className="text-zinc-400 text-xs mt-0.5 truncate">{seq.note}</p>}
+        {seq.note && <p className="text-zinc-400 text-sm mt-0.5 truncate">{seq.note}</p>}
       </button>
       {/* Actions */}
       <button onClick={onEdit} className="text-zinc-500 hover:text-white transition-colors p-1.5" aria-label="Edit">
@@ -491,20 +491,20 @@ function EditRow({
 
   return (
     <li className="bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 space-y-2">
-      {error && <p className="text-red-400 text-xs">{error}</p>}
+      {error && <p className="text-red-400 text-sm">{error}</p>}
       <div className="flex gap-2">
         <label className="flex-1 space-y-0.5">
-          <span className="text-zinc-500 text-xs">Start (m:ss)</span>
+          <span className="text-zinc-500 text-sm">Start (m:ss)</span>
           <div className="flex gap-1">
             <input
               value={startVal}
               onChange={(e) => setStartVal(e.target.value)}
-              className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1.5 text-white text-sm font-mono outline-none focus:border-zinc-500"
+              className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1.5 text-white text-base font-mono outline-none focus:border-zinc-500"
               placeholder="0:00"
             />
             <button
               onClick={() => setStartVal(fmtMs(currentPositionMs))}
-              className="text-zinc-400 hover:text-white bg-zinc-800 border border-zinc-700 rounded-lg px-2 text-xs transition-colors"
+              className="text-zinc-400 hover:text-white bg-zinc-800 border border-zinc-700 rounded-lg px-2 text-sm transition-colors"
               title="Set to current position"
             >
               ↖
@@ -512,17 +512,17 @@ function EditRow({
           </div>
         </label>
         <label className="flex-1 space-y-0.5">
-          <span className="text-zinc-500 text-xs">End (m:ss)</span>
+          <span className="text-zinc-500 text-sm">End (m:ss)</span>
           <div className="flex gap-1">
             <input
               value={endVal}
               onChange={(e) => setEndVal(e.target.value)}
-              className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1.5 text-white text-sm font-mono outline-none focus:border-zinc-500"
+              className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1.5 text-white text-base font-mono outline-none focus:border-zinc-500"
               placeholder="0:00"
             />
             <button
               onClick={() => setEndVal(fmtMs(currentPositionMs))}
-              className="text-zinc-400 hover:text-white bg-zinc-800 border border-zinc-700 rounded-lg px-2 text-xs transition-colors"
+              className="text-zinc-400 hover:text-white bg-zinc-800 border border-zinc-700 rounded-lg px-2 text-sm transition-colors"
               title="Set to current position"
             >
               ↖
@@ -534,19 +534,19 @@ function EditRow({
         value={noteVal}
         onChange={(e) => setNoteVal(e.target.value)}
         placeholder="Note (optional)"
-        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-sm outline-none focus:border-zinc-500 placeholder-zinc-600"
+        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-base outline-none focus:border-zinc-500 placeholder-zinc-600"
       />
       <div className="flex gap-2">
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex-1 rounded-lg bg-white text-black text-sm font-semibold py-2 hover:bg-zinc-100 transition-colors disabled:opacity-50"
+          className="flex-1 rounded-lg bg-white text-black text-base font-semibold py-2 hover:bg-zinc-100 transition-colors disabled:opacity-50"
         >
           Save
         </button>
         <button
           onClick={onCancel}
-          className="flex-1 rounded-lg border border-zinc-700 text-zinc-400 text-sm py-2 hover:text-white transition-colors"
+          className="flex-1 rounded-lg border border-zinc-700 text-zinc-400 text-base py-2 hover:text-white transition-colors"
         >
           Cancel
         </button>

@@ -26,19 +26,19 @@ export default async function LibraryPage({
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h1 className="text-xl font-bold text-white">Your Library</h1>
-              <p className="text-zinc-500 text-xs mt-0.5">
+              <h1 className="text-2xl font-bold text-white">Your Library</h1>
+              <p className="text-zinc-500 text-sm mt-0.5">
                 {tracks.length} saved tracks &middot; {playlists.length} playlists
               </p>
             </div>
-            <Link href="/dashboard" className="text-zinc-400 hover:text-white text-sm transition-colors">
+            <Link href="/dashboard" className="text-zinc-400 hover:text-white text-base transition-colors">
               ← Back
             </Link>
           </div>
           <div className="flex gap-2">
             <Link
               href="/library?tab=tracks"
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              className={`px-4 py-1.5 rounded-full text-base font-medium transition-colors ${
                 activeTab === 'tracks' ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white'
               }`}
             >
@@ -46,7 +46,7 @@ export default async function LibraryPage({
             </Link>
             <Link
               href="/library?tab=playlists"
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              className={`px-4 py-1.5 rounded-full text-base font-medium transition-colors ${
                 activeTab === 'playlists' ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white'
               }`}
             >
@@ -69,7 +69,7 @@ export default async function LibraryPage({
 
 function TrackList({ tracks }: { tracks: SpotifyTrack[] }) {
   if (tracks.length === 0) {
-    return <p className="text-zinc-500 text-sm py-12 text-center">No saved tracks found.</p>;
+    return <p className="text-zinc-500 text-base py-12 text-center">No saved tracks found.</p>;
   }
   return (
     <ul>
@@ -90,17 +90,17 @@ function TrackRow({ track }: { track: SpotifyTrack }) {
         <div className="w-11 h-11 rounded bg-zinc-800 shrink-0" />
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-white text-sm font-medium truncate">{track.name}</p>
-        <p className="text-zinc-400 text-xs truncate">{artistNames}</p>
+        <p className="text-white text-base font-medium truncate">{track.name}</p>
+        <p className="text-zinc-400 text-sm truncate">{artistNames}</p>
       </div>
-      <span className="text-zinc-600 text-xs shrink-0 tabular-nums">{formatDuration(track.duration_ms)}</span>
+      <span className="text-zinc-600 text-sm shrink-0 tabular-nums">{formatDuration(track.duration_ms)}</span>
     </li>
   );
 }
 
 function PlaylistList({ playlists }: { playlists: SpotifyPlaylist[] }) {
   if (playlists.length === 0) {
-    return <p className="text-zinc-500 text-sm py-12 text-center">No playlists found.</p>;
+    return <p className="text-zinc-500 text-base py-12 text-center">No playlists found.</p>;
   }
   return (
     <ul>
@@ -124,8 +124,8 @@ function PlaylistRow({ playlist }: { playlist: SpotifyPlaylist }) {
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-white text-sm font-medium truncate">{playlist.name}</p>
-        <p className="text-zinc-400 text-xs truncate">
+        <p className="text-white text-base font-medium truncate">{playlist.name}</p>
+        <p className="text-zinc-400 text-sm truncate">
           {playlist.owner.display_name} &middot; {playlist?.tracks?.total} tracks
         </p>
       </div>
