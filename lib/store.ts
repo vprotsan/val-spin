@@ -380,6 +380,17 @@ export function playlistDurationMs(): number {
  * Supabase so we bypass the per-sequence overlap validation (the DB is
  * the source of truth and is assumed to be valid).
  */
+/**
+ * Replace the entire playlist with pre-built segments — used when hydrating
+ * from Supabase so we skip the individual add* calls.
+ */
+export function bulkLoadPlaylist(segments: Array<{ id: string; cue: Cue; songs: Song[] }>): void {
+  const store = getStore();
+  store.playlist = {
+    segments: segments.map((seg) => ({ id: seg.id, cue: seg.cue, songs: seg.songs })),
+  };
+}
+
 export function bulkLoadSequences(songId: string, sequences: Sequence[]): void {
   const store = getStore();
   const song = store.songs.get(songId);

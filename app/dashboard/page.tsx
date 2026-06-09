@@ -72,6 +72,17 @@ export default async function DashboardPage() {
 
         {/* Navigation */}
         <Link
+          href="/class-playlists"
+          className="w-full flex items-center justify-between rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors px-5 py-4"
+        >
+          <div>
+            <p className="text-white font-medium text-sm">Class Playlists</p>
+            <p className="text-zinc-500 text-xs mt-0.5">Saved class playlists · view &amp; edit segments</p>
+          </div>
+          <span className="text-zinc-500 text-lg">→</span>
+        </Link>
+
+        <Link
           href="/playlist"
           className="w-full flex items-center justify-between rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors px-5 py-4"
         >

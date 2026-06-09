@@ -2,22 +2,31 @@
 
 import { useState, useTransition, useCallback } from 'react';
 import {
-  addSegmentAction,
-  removeSegmentAction,
-  moveSegmentAction,
-  addSongToSegmentAction,
-  removeSongFromSegmentAction,
-  moveSongAction,
-} from '@/app/actions/playlist';
+  spAddSegmentAction,
+  spRemoveSegmentAction,
+  spMoveSegmentAction,
+  spAddSongAction,
+  spRemoveSongAction,
+  spMoveSongAction,
+} from '@/app/actions/savedPlaylists';
 import { CUE_TYPES } from '@/types';
 import type { Cue, Segment, Song } from '@/types';
-import SaveToSpotify from './SaveToSpotify';
-import { SegmentCard, CUE_BTN, fmtMs, segDuration } from './shared';
+import { SegmentCard, CUE_BTN, fmtMs, segDuration } from '@/components/playlist/shared';
 
-export default function PlaylistBuilder({
+/**
+ * Editable playlist builder for a specific saved playlist.
+ *
+ * Unlike PlaylistBuilder (which mirrors an in-memory store), every mutation
+ * here goes directly to Supabase via a server action that returns the full
+ * updated Segment[] — including freshly-loaded sequences for any newly-added
+ * song. Local state is replaced wholesale on each action return.
+ */
+export default function SavedPlaylistBuilder({
+  playlistId,
   initialSegments,
   songsByCue,
 }: {
+  playlistId: string;
   initialSegments: Segment[];
   songsByCue: Record<Cue, Song[]>;
 }) {
@@ -27,91 +36,63 @@ export default function PlaylistBuilder({
 
   const totalMs = segments.reduce((sum, s) => sum + segDuration(s), 0);
 
-  // ── Add segment ─────────────────────────────────────────────────────────────
-  const handleAddSegment = useCallback((cue: Cue) => {
-    setAddingCuePicker(false);
-    startTransition(async () => {
-      const result = await addSegmentAction(cue);
-      if (result.ok) {
-        setSegments((prev) => [...prev, result.segment]);
-      }
-    });
-  }, []);
-
-  // ── Remove segment ──────────────────────────────────────────────────────────
-  const handleRemoveSegment = useCallback((segmentId: string) => {
-    setSegments((prev) => prev.filter((s) => s.id !== segmentId));
-    startTransition(async () => { await removeSegmentAction(segmentId); });
-  }, []);
-
-  // ── Move segment ────────────────────────────────────────────────────────────
-  const handleMoveSegment = useCallback((segmentId: string, dir: 'up' | 'down') => {
-    setSegments((prev) => {
-      const idx = prev.findIndex((s) => s.id === segmentId);
-      if (idx === -1) return prev;
-      const toIdx = dir === 'up' ? idx - 1 : idx + 1;
-      if (toIdx < 0 || toIdx >= prev.length) return prev;
-      const next = [...prev];
-      [next[idx], next[toIdx]] = [next[toIdx], next[idx]];
-      return next;
-    });
-    startTransition(async () => { await moveSegmentAction(segmentId, dir); });
-  }, []);
-
-  // ── Add song ────────────────────────────────────────────────────────────────
-  const handleAddSong = useCallback((segmentId: string, songId: string) => {
-    startTransition(async () => {
-      const result = await addSongToSegmentAction(segmentId, songId);
-      if (result.ok) {
-        setSegments((prev) =>
-          prev.map((seg) =>
-            seg.id === segmentId
-              ? { ...seg, songs: [...seg.songs, result.song] }
-              : seg,
-          ),
-        );
-      }
-    });
-  }, []);
-
-  // ── Remove song ─────────────────────────────────────────────────────────────
-  const handleRemoveSong = useCallback((segmentId: string, songId: string, idx: number) => {
-    setSegments((prev) =>
-      prev.map((seg) => {
-        if (seg.id !== segmentId) return seg;
-        const songs = [...seg.songs];
-        songs.splice(idx, 1);
-        return { ...seg, songs };
-      }),
-    );
-    startTransition(async () => { await removeSongFromSegmentAction(segmentId, songId); });
-  }, []);
-
-  // ── Move song ───────────────────────────────────────────────────────────────
-  const handleMoveSong = useCallback(
-    (segmentId: string, songIdx: number, dir: 'up' | 'down') => {
-      setSegments((prev) =>
-        prev.map((seg) => {
-          if (seg.id !== segmentId) return seg;
-          const songs = [...seg.songs];
-          const toIdx = dir === 'up' ? songIdx - 1 : songIdx + 1;
-          if (toIdx < 0 || toIdx >= songs.length) return seg;
-          [songs[songIdx], songs[toIdx]] = [songs[toIdx], songs[songIdx]];
-          return { ...seg, songs };
-        }),
-      );
-      startTransition(async () => { await moveSongAction(segmentId, songIdx, dir); });
+  // Convenience: fire action, replace segments on success
+  const sync = useCallback(
+    (action: () => Promise<{ ok: true; segments: Segment[] } | { ok: false; error: string }>) => {
+      startTransition(async () => {
+        const result = await action();
+        if (result.ok) setSegments(result.segments);
+        else console.error('[SavedPlaylistBuilder]', result.error);
+      });
     },
     [],
   );
 
-  // ── Render ───────────────────────────────────────────────────────────────────
+  // ── Add segment ─────────────────────────────────────────────────────────────
+  const handleAddSegment = useCallback((cue: Cue) => {
+    setAddingCuePicker(false);
+    sync(() => spAddSegmentAction(playlistId, cue));
+  }, [playlistId, sync]);
+
+  // ── Remove segment ──────────────────────────────────────────────────────────
+  const handleRemoveSegment = useCallback((segmentId: string) => {
+    sync(() => spRemoveSegmentAction(playlistId, segmentId));
+  }, [playlistId, sync]);
+
+  // ── Move segment ────────────────────────────────────────────────────────────
+  const handleMoveSegment = useCallback((segmentId: string, dir: 'up' | 'down') => {
+    sync(() => spMoveSegmentAction(playlistId, segmentId, dir));
+  }, [playlistId, sync]);
+
+  // ── Add song ────────────────────────────────────────────────────────────────
+  // Waits for server response so sequences are populated from DB
+  const handleAddSong = useCallback((segmentId: string, songId: string) => {
+    sync(() => spAddSongAction(playlistId, segmentId, songId));
+  }, [playlistId, sync]);
+
+  // ── Remove song ─────────────────────────────────────────────────────────────
+  const handleRemoveSong = useCallback(
+    (segmentId: string, _songId: string, idx: number) => {
+      sync(() => spRemoveSongAction(playlistId, segmentId, idx));
+    },
+    [playlistId, sync],
+  );
+
+  // ── Move song ───────────────────────────────────────────────────────────────
+  const handleMoveSong = useCallback(
+    (segmentId: string, songIdx: number, dir: 'up' | 'down') => {
+      sync(() => spMoveSongAction(playlistId, segmentId, songIdx, dir));
+    },
+    [playlistId, sync],
+  );
+
   return (
-    <div className={`space-y-4 transition-opacity ${isPending ? 'opacity-70' : ''}`}>
+    <div className={`space-y-4 transition-opacity ${isPending ? 'opacity-60 pointer-events-none' : ''}`}>
       {/* Summary */}
       <p className="text-zinc-500 text-xs">
         {segments.length} {segments.length === 1 ? 'segment' : 'segments'}
         {totalMs > 0 && <> &middot; {fmtMs(totalMs)} total</>}
+        {isPending && <span className="ml-2 text-zinc-600">saving…</span>}
       </p>
 
       {/* Segment list */}
@@ -130,7 +111,6 @@ export default function PlaylistBuilder({
         />
       ))}
 
-      {/* Empty state */}
       {segments.length === 0 && (
         <p className="text-zinc-600 text-sm text-center py-8">
           No segments yet. Add one below to start building your class.
@@ -167,13 +147,6 @@ export default function PlaylistBuilder({
           <span className="text-lg leading-none">+</span> Add Segment
         </button>
       )}
-
-      {/* Save to Spotify */}
-      <div className="border-t border-zinc-800 pt-4">
-        <SaveToSpotify
-          totalTracks={segments.reduce((sum, seg) => sum + seg.songs.length, 0)}
-        />
-      </div>
     </div>
   );
 }
