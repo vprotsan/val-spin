@@ -278,46 +278,53 @@ export default function ConnectPlayer({ songs }: { songs: Song[] }) {
     try {
       const token = await fetchToken();
 
-      // device_id in the URL handles the transfer implicitly — no separate
-      // apiTransfer call needed (that caused a race condition on iOS).
+      // Send the play command. device_id in the URL handles transfer + play
+      // atomically — no separate transfer call needed.
       await apiPlayQueue(uris, idx, selectedDeviceId, token);
 
-      // Wait briefly for Spotify to process the command, then verify it
-      // actually started. This catches the iOS "silent ignore" case where
-      // the app accepts the HTTP call but doesn't actually start playing.
-      await new Promise((r) => setTimeout(r, 800));
-      const verifyToken = await fetchToken();
-      const state = await apiGetPlaybackState(verifyToken);
+      // Update UI optimistically so it feels instant
+      setCurrentIndex(idx);
+      setHasStarted(true);
+      setPositionMs(0);
 
-      if (!state || !state.is_playing) {
-        // Spotify received the command but didn't start — usually means the
-        // app was idle (never played anything this session) on iOS.
+      // Verify playback started. Spotify can take 1–3 s to transition
+      // (it briefly pauses while loading the new track), so we retry up to
+      // 5 times × 700 ms = 3.5 s before giving up.
+      let confirmed = false;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        await new Promise((r) => setTimeout(r, 700));
+        try {
+          const checkToken = await fetchToken();
+          const state = await apiGetPlaybackState(checkToken);
+          if (state?.is_playing) {
+            confirmed = true;
+            setIsPlaying(true);
+            isPlayingRef.current = true;
+            setPositionMs(state.progress_ms);
+            setDurationMs(state.item?.duration_ms ?? 0);
+            startTick();
+            startPoll();
+            break;
+          }
+        } catch { /* network hiccup — keep retrying */ }
+      }
+
+      if (!confirmed) {
         setError(
-          'Spotify received the command but didn\'t start playing. ' +
-          'Play any song in the Spotify app first, then press ▶ here.',
+          'Spotify didn\'t respond after 3 s. ' +
+          'Make sure the Spotify app is open and has played at least one song this session, then press ▶ again.',
         );
         setIsPlaying(false);
         stopTick();
-        return;
       }
-
-      // Confirmed playing — sync from server state
-      setCurrentIndex(idx);
-      setHasStarted(true);
-      setIsPlaying(true);
-      isPlayingRef.current = true;
-      setPositionMs(state.progress_ms);
-      setDurationMs(state.item?.duration_ms ?? 0);
-      startTick();
-      startPoll();
     } catch (e) {
       const status = (e as { status?: number }).status;
       if (status === 404) {
-        setError('Device not found — open the Spotify app and try Refresh.');
+        setError('Device not found. Open the Spotify app and tap Refresh.');
       } else if (status === 403) {
-        setError('Spotify rejected the command. Make sure Premium is active.');
+        setError('Permission denied — check Spotify Premium is active.');
       } else {
-        setError('Playback failed. Open the Spotify app, play any song, then press ▶ here.');
+        setError(`Playback failed (${status ?? 'network error'}). Open Spotify on your phone and try again.`);
       }
       setIsPlaying(false);
       stopTick();
