@@ -109,6 +109,21 @@ function buildSegmentGradient(sequences: Sequence[], durationMs: number): string
   return `linear-gradient(to right, ${stops.join(', ')})`;
 }
 
+// ── Mobile detection ──────────────────────────────────────────────────────────
+
+/**
+ * The Spotify Web Playback SDK requires desktop Chrome / Firefox / Edge.
+ * It silently fails on mobile browsers (iOS blocks MSE entirely; Android
+ * Chrome connects but can't actually play), which causes the "skip through
+ * all songs" bug. Detect mobile early and render a fallback instead.
+ */
+function detectMobile(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent,
+  );
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface PlaybackState {
@@ -212,15 +227,22 @@ function SegmentedTrackBar({
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
+  // Computed once on mount — safe because navigator.userAgent never changes mid-session
+  const [isMobile]    = useState(detectMobile);
+
   const playerRef      = useRef<Spotify.Player | null>(null);
   const deviceIdRef    = useRef('');
   const tickRef        = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Ref mirrors for stale-closure safety inside SDK event listeners
-  const songsRef         = useRef(songs);
-  const currentIndexRef  = useRef(0);
-  const playbackRef      = useRef<PlaybackState | null>(null);
-  const hasStartedRef    = useRef(false);
+  const songsRef            = useRef(songs);
+  const currentIndexRef     = useRef(0);
+  const playbackRef         = useRef<PlaybackState | null>(null);
+  const hasStartedRef       = useRef(false);
+  // Timestamp of the last playAtIndex call — guards against the "instant
+  // paused-at-0" false-positive that triggers rapid auto-advance when the SDK
+  // fails to start (e.g. on mobile, or during a 404 retry).
+  const lastPlayStartedAtRef = useRef(0);
 
   const [status, setStatus]             = useState<PlayerStatus>('loading');
   const [statusMsg, setStatusMsg]       = useState('');
@@ -277,6 +299,7 @@ export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
 
     setCurrentIndex(idx);
     hasStartedRef.current = true;
+    lastPlayStartedAtRef.current = Date.now(); // stamp for auto-advance guard
   }, []);
 
   // ── SDK initialisation ──────────────────────────────────────────────────────
@@ -340,8 +363,11 @@ export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
 
       if (paused) stopTick(); else startTick();
 
-      // Auto-advance: was playing → now paused at position 0 = track ended
-      if (paused && position === 0 && !prevPaused && hasStartedRef.current) {
+      // Auto-advance: was playing → now paused at position 0 = track ended.
+      // The 3 s guard prevents false-positives when the SDK fires an immediate
+      // paused-at-0 event because playback failed (mobile, device error, etc.).
+      const playedLongEnough = Date.now() - lastPlayStartedAtRef.current > 3000;
+      if (paused && position === 0 && !prevPaused && hasStartedRef.current && playedLongEnough) {
         const next = currentIndexRef.current + 1;
         if (next < songsRef.current.length) {
           playAtIndex(next);
@@ -391,6 +417,52 @@ export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
   // ── Derived values for render ───────────────────────────────────────────────
 
   if (songs.length === 0) return null;
+
+  // ── Mobile fallback ─────────────────────────────────────────────────────────
+  // The SDK can't play on mobile browsers. Show a browse-and-open-in-Spotify
+  // bar so the page is still useful on a phone.
+  if (isMobile) {
+    const song = songs[currentIndex];
+    const trackId = song.spotifyUri.replace('spotify:track:', '');
+    return (
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-zinc-950/95 backdrop-blur-sm border-t border-zinc-800">
+        <div className="max-w-lg mx-auto px-4 py-4 flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-base font-medium truncate">{song.title}</p>
+            <p className="text-zinc-500 text-sm truncate">{song.artist}</p>
+          </div>
+          <span className="text-zinc-700 text-sm tabular-nums shrink-0">
+            {currentIndex + 1} / {songs.length}
+          </span>
+          {/* Prev / Next to browse the queue */}
+          <CtrlBtn
+            label="Previous song"
+            disabled={currentIndex === 0}
+            onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
+          >
+            <PrevIcon />
+          </CtrlBtn>
+          <CtrlBtn
+            label="Next song"
+            disabled={currentIndex >= songs.length - 1}
+            onClick={() => setCurrentIndex((i) => Math.min(songs.length - 1, i + 1))}
+          >
+            <NextIcon />
+          </CtrlBtn>
+          {/* Deep-link opens Spotify app */}
+          <a
+            href={`https://open.spotify.com/track/${trackId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 w-11 h-11 rounded-full bg-[#1DB954] flex items-center justify-center active:scale-95 transition-transform"
+            aria-label="Open in Spotify"
+          >
+            <SpotifyIcon />
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   const currentSong  = songs[currentIndex];
   const sequences    = currentSong.sequences;
@@ -546,4 +618,12 @@ function PrevIcon() {
 }
 function NextIcon() {
   return <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2z" /></svg>;
+}
+
+function SpotifyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="black">
+      <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.623.623 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.623.623 0 0 1-.277-1.215c3.809-.87 7.077-.496 9.713 1.115a.623.623 0 0 1 .206.857zm1.223-2.722a.78.78 0 0 1-1.072.257c-2.687-1.652-6.786-2.13-9.965-1.166a.78.78 0 0 1-.973-.519.781.781 0 0 1 .52-.972c3.632-1.102 8.147-.568 11.233 1.328a.78.78 0 0 1 .257 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 1 1-.543-1.793c3.532-1.072 9.404-.865 13.115 1.338a.937.937 0 0 1-.955 1.612z" />
+    </svg>
+  );
 }
