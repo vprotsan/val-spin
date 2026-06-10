@@ -16,17 +16,6 @@ interface Props {
   taggedUris: Record<string, Cue>;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function useDebounce<T>(value: T, ms: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), ms);
-    return () => clearTimeout(id);
-  }, [value, ms]);
-  return debounced;
-}
-
 const CUE_BTN: Record<Cue, string> = {
   Jumps:   'bg-amber-500/20 text-amber-300 border-amber-600/50 hover:bg-amber-500/40',
   Climbs:  'bg-emerald-500/20 text-emerald-300 border-emerald-600/50 hover:bg-emerald-500/40',
@@ -76,11 +65,17 @@ function Sheet({
   const [tab, setTab] = useState<'library' | 'search'>('library');
   const [libraryTracks, setLibraryTracks] = useState<SpotifyTrack[] | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [submittedQuery, setSubmittedQuery] = useState(''); // only set when user explicitly searches
   const [searchResults, setSearchResults] = useState<SpotifyTrack[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
-  const debouncedQuery = useDebounce(searchQuery, 350);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const submitSearch = useCallback(() => {
+    const q = searchQuery.trim();
+    if (!q) return;
+    setSubmittedQuery(q);
+  }, [searchQuery]);
 
   // ── Load library once on mount ─────────────────────────────────────────────
   useEffect(() => {
@@ -90,12 +85,12 @@ function Sheet({
       .catch(() => setLibraryTracks([]));
   }, []);
 
-  // ── Search when debounced query changes ────────────────────────────────────
+  // ── Search only when submittedQuery changes (user pressed Enter or tapped Search) ──
   useEffect(() => {
-    if (!debouncedQuery.trim()) { setSearchResults([]); setSearchError(''); return; }
+    if (!submittedQuery) { setSearchResults([]); setSearchError(''); return; }
     setSearching(true);
     setSearchError('');
-    fetch(`/api/spotify/search?q=${encodeURIComponent(debouncedQuery)}`)
+    fetch(`/api/spotify/search?q=${encodeURIComponent(submittedQuery)}`)
       .then(async (r) => {
         const json = await r.json();
         if (!r.ok) {
@@ -110,7 +105,7 @@ function Sheet({
         setSearchResults([]);
       })
       .finally(() => setSearching(false));
-  }, [debouncedQuery]);
+  }, [submittedQuery]);
 
   // ── Focus search input when tab switches ──────────────────────────────────
   useEffect(() => {
@@ -150,17 +145,25 @@ function Sheet({
         ))}
       </div>
 
-      {/* Search input */}
+      {/* Search input + button */}
       {tab === 'search' && (
-        <div className="px-4 pt-2 pb-1 shrink-0">
+        <div className="px-4 pt-2 pb-1 shrink-0 flex gap-2">
           <input
             ref={searchInputRef}
-            type="text"
+            type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitSearch(); } }}
             placeholder="Artist, song, album…"
-            className="w-full rounded-xl bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 px-4 py-2.5 text-base outline-none focus:border-zinc-500"
+            className="flex-1 rounded-xl bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 px-4 py-2.5 text-base outline-none focus:border-zinc-500"
           />
+          <button
+            onClick={submitSearch}
+            disabled={!searchQuery.trim() || searching}
+            className="shrink-0 rounded-xl bg-white text-black font-semibold text-base px-4 py-2.5 disabled:opacity-40 active:scale-95 transition-all"
+          >
+            {searching ? '…' : 'Search'}
+          </button>
         </div>
       )}
 
