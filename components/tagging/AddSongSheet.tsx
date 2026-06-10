@@ -94,7 +94,9 @@ function Sheet({
       .then(async (r) => {
         const json = await r.json();
         if (!r.ok) {
-          setSearchError(json.error ?? `Search failed (${r.status})`);
+          const msg = [json.error, json.detail].filter(Boolean).join(' — ');
+          console.error('[search] error:', r.status, json);
+          setSearchError(msg || `Search failed (${r.status})`);
           setSearchResults([]);
         } else {
           setSearchResults(json.tracks ?? []);
