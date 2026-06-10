@@ -78,6 +78,7 @@ function Sheet({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SpotifyTrack[]>([]);
   const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState('');
   const debouncedQuery = useDebounce(searchQuery, 350);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -91,12 +92,23 @@ function Sheet({
 
   // ── Search when debounced query changes ────────────────────────────────────
   useEffect(() => {
-    if (!debouncedQuery.trim()) { setSearchResults([]); return; }
+    if (!debouncedQuery.trim()) { setSearchResults([]); setSearchError(''); return; }
     setSearching(true);
+    setSearchError('');
     fetch(`/api/spotify/search?q=${encodeURIComponent(debouncedQuery)}`)
-      .then((r) => r.json())
-      .then(({ tracks }) => setSearchResults(tracks ?? []))
-      .catch(() => setSearchResults([]))
+      .then(async (r) => {
+        const json = await r.json();
+        if (!r.ok) {
+          setSearchError(json.error ?? `Search failed (${r.status})`);
+          setSearchResults([]);
+        } else {
+          setSearchResults(json.tracks ?? []);
+        }
+      })
+      .catch(() => {
+        setSearchError('Network error — check your connection.');
+        setSearchResults([]);
+      })
       .finally(() => setSearching(false));
   }, [debouncedQuery]);
 
@@ -174,7 +186,14 @@ function Sheet({
           </p>
         )}
 
-        {!isLoading && tracks.length === 0 && (tab === 'library' || searchQuery) && (
+        {!isLoading && tab === 'search' && searchError && (
+          <div className="py-12 text-center space-y-2">
+            <p className="text-red-400 text-base">{searchError}</p>
+            <p className="text-zinc-600 text-sm">Try logging out and back in if this persists.</p>
+          </div>
+        )}
+
+        {!isLoading && !searchError && tracks.length === 0 && (tab === 'library' || searchQuery) && (
           <p className="text-zinc-500 text-base text-center py-12">
             {tab === 'library' ? 'No saved tracks found.' : 'No results.'}
           </p>
