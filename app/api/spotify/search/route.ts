@@ -14,16 +14,22 @@ export async function GET(request: Request) {
   // country when a user access token is present. The old 'from_token' value
   // was deprecated and can silently return empty results on current API versions.
   const params = new URLSearchParams({ q, type: 'track', limit: '30' });
-  const res = await fetch(`https://api.spotify.com/v1/search?${params}`, {
+  const spotifyUrl = `https://api.spotify.com/v1/search?${params}`;
+  console.log('[search] requesting:', spotifyUrl);
+
+  const res = await fetch(spotifyUrl, {
     headers: { Authorization: `Bearer ${token}` },
     cache: 'no-store',
   });
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    console.error(`[search] Spotify ${res.status}:`, body);
+    console.error(`[search] Spotify ${res.status} for q="${q}":`, body);
+    // Pass the raw Spotify error body to the client so we can see exactly what failed
+    let detail = body;
+    try { detail = JSON.stringify(JSON.parse(body)); } catch { /* keep raw */ }
     return Response.json(
-      { error: `Spotify error ${res.status}`, detail: body },
+      { error: `Spotify error ${res.status}`, detail },
       { status: res.status },
     );
   }
