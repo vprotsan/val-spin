@@ -17,9 +17,10 @@ export async function GET(request: Request) {
 
   // Use encodeURIComponent directly — URLSearchParams encodes spaces as '+'
   // which some Spotify API versions misinterpret as literal plus signs.
+  // Omit limit — use Spotify's default (20) to avoid parameter validation quirks.
   const spotifyUrl =
     `https://api.spotify.com/v1/search` +
-    `?q=${encodeURIComponent(q)}&type=track&limit=30`;
+    `?q=${encodeURIComponent(q)}&type=track`;
 
   console.log('[search] q:', JSON.stringify(q), '→', spotifyUrl);
 
