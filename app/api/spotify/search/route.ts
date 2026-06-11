@@ -7,15 +7,21 @@ export async function GET(request: Request) {
   if (!token) return Response.json({ error: 'Not authenticated' }, { status: 401 });
 
   const { searchParams } = new URL(request.url);
-  const q = searchParams.get('q')?.trim();
+  const raw = searchParams.get('q')?.trim() ?? '';
+
+  // Strip HTML tags/entities — Spotify returns 400 "Invalid html" if the
+  // query contains < > & or HTML-encoded characters (can happen with iOS
+  // autocomplete or smart-quote substitution).
+  const q = raw.replace(/[<>&"']/g, ' ').replace(/\s+/g, ' ').trim();
   if (!q) return Response.json({ tracks: [] });
 
-  // Omit 'market' — Spotify automatically scopes results to the account's
-  // country when a user access token is present. The old 'from_token' value
-  // was deprecated and can silently return empty results on current API versions.
-  const params = new URLSearchParams({ q, type: 'track', limit: '30' });
-  const spotifyUrl = `https://api.spotify.com/v1/search?${params}`;
-  console.log('[search] requesting:', spotifyUrl);
+  // Use encodeURIComponent directly — URLSearchParams encodes spaces as '+'
+  // which some Spotify API versions misinterpret as literal plus signs.
+  const spotifyUrl =
+    `https://api.spotify.com/v1/search` +
+    `?q=${encodeURIComponent(q)}&type=track&limit=30`;
+
+  console.log('[search] q:', JSON.stringify(q), '→', spotifyUrl);
 
   const res = await fetch(spotifyUrl, {
     headers: { Authorization: `Bearer ${token}` },

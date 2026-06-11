@@ -72,7 +72,9 @@ function Sheet({
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const submitSearch = useCallback(() => {
-    const q = searchQuery.trim();
+    // Strip HTML characters — iOS autocomplete can inject smart quotes or
+    // formatted text that Spotify rejects with 400 "Invalid html".
+    const q = searchQuery.replace(/[<>&"']/g, ' ').replace(/\s+/g, ' ').trim();
     if (!q) return;
     setSubmittedQuery(q);
   }, [searchQuery]);
@@ -152,7 +154,7 @@ function Sheet({
         <div className="px-4 pt-2 pb-1 shrink-0 flex gap-2">
           <input
             ref={searchInputRef}
-            type="search"
+            type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitSearch(); } }}
