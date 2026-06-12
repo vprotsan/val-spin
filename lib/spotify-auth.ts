@@ -7,6 +7,7 @@ const SPOTIFY_ACCOUNTS = 'https://accounts.spotify.com';
 const SCOPES = [
   'user-library-read',
   'playlist-read-private',
+  'playlist-read-collaborative',    // read collaborative playlists
   'playlist-modify-private',
   'playlist-modify-public',
   'streaming',                    // Web Playback SDK (desktop)
