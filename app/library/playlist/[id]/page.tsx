@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getValidAccessToken, getSpotifyUserId } from '@/lib/spotify-auth';
 import { getPlaylistWithTracks } from '@/lib/spotify-api';
@@ -30,8 +30,20 @@ export default async function PlaylistTracksPage({
   let playlist;
   try {
     playlist = await getPlaylistWithTracks(id, token, 200);
-  } catch {
-    notFound();
+  } catch (err) {
+    console.error('[playlist tracks] fetch failed:', err);
+    // Return a proper error UI instead of a hard 404 so the user
+    // can navigate back rather than hitting a dead end.
+    return (
+      <main className="min-h-screen bg-black flex flex-col items-center justify-center gap-4 px-4">
+        <p className="text-red-400 text-base text-center">
+          Could not load this playlist. It may be private or unavailable.
+        </p>
+        <a href="/library?tab=playlists" className="text-zinc-400 hover:text-white text-base underline">
+          ← Back to playlists
+        </a>
+      </main>
+    );
   }
 
   const thumb = playlist.images?.[0]?.url;
