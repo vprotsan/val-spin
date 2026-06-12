@@ -95,50 +95,56 @@ interface PlaylistTracksPage {
 
 /**
  * Fetch a playlist's metadata and up to `maxTracks` tracks.
- * Filters out null items (locally deleted / unavailable tracks).
+ * Uses two separate endpoints:
+ *   - GET /playlists/{id}?fields=...  → name, images, owner, total
+ *   - GET /playlists/{id}/tracks      → paginated track list
+ * (The combined endpoint silently drops `tracks` when given unknown params.)
  */
 export async function getPlaylistWithTracks(
   playlistId: string,
   token: string,
-  maxTracks = 100,
+  maxTracks = 200,
 ): Promise<PlaylistDetail> {
-  // First call returns metadata + first 50 tracks
-  const data = await spotifyFetch<{
+  const encodedId = encodeURIComponent(playlistId);
+
+  // ── 1. Metadata only ────────────────────────────────────────────────────────
+  const meta = await spotifyFetch<{
     id: string;
     name: string;
     images: { url: string }[];
     owner: { display_name: string };
-    tracks: PlaylistTracksPage;
-  }>(`/playlists/${encodeURIComponent(playlistId)}?limit=50`, token);
+    tracks: { total: number };
+  }>(
+    `/playlists/${encodedId}?fields=id%2Cname%2Cimages%2Cowner%2Ctracks.total`,
+    token,
+  );
 
-  const tracks: SpotifyTrack[] = data.tracks.items
-    .map((i) => i.track)
-    .filter((t): t is SpotifyTrack => !!t?.id);
+  // ── 2. Tracks (paginated via the dedicated endpoint) ────────────────────────
+  const tracks: SpotifyTrack[] = [];
+  let url: string | null =
+    `${BASE}/playlists/${encodedId}/tracks?limit=50`;
 
-  // Paginate if needed
-  let next = data.tracks.next;
-  while (next && tracks.length < maxTracks) {
-    const page = await fetch(next, {
+  while (url && tracks.length < maxTracks) {
+    const res = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store',
-    }).then((r) => {
-      if (!r.ok) throw new Error(`Spotify playlist tracks page → ${r.status}`);
-      return r.json() as Promise<PlaylistTracksPage>;
     });
+    if (!res.ok) throw new Error(`Spotify playlist tracks → ${res.status}`);
+    const page = (await res.json()) as PlaylistTracksPage;
     tracks.push(
       ...page.items
-        .map((i) => i.track)
-        .filter((t): t is SpotifyTrack => !!t?.id),
+        .map((i: { track: SpotifyTrack | null }) => i.track)
+        .filter((t: SpotifyTrack | null): t is SpotifyTrack => !!t?.id),
     );
-    next = page.next;
+    url = page.next;
   }
 
   return {
-    id: data.id,
-    name: data.name,
-    images: data.images,
-    owner: data.owner,
-    total: data.tracks.total,
+    id: meta.id,
+    name: meta.name,
+    images: meta.images,
+    owner: meta.owner,
+    total: meta.tracks.total,
     tracks: tracks.slice(0, maxTracks),
   };
 }
