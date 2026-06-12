@@ -32,15 +32,17 @@ export async function tagSong(input: TagSongInput): Promise<void> {
 
   addSong(input);
 
-  // Write-through to Supabase (fire in background, don't block UI)
-  upsertTag({
+  // Must await — on Vercel the next request can land on a different serverless
+  // instance that re-hydrates from Supabase. If the write hasn't committed yet,
+  // the new tag won't appear and counts will appear to reset.
+  await upsertTag({
     spotify_user_id: userId,
     spotify_uri: input.spotifyUri,
     title: input.title,
     artist: input.artist,
     duration_ms: input.durationMs,
     cue: input.cue,
-  }).catch((err) => console.error('upsertTag failed:', err));
+  });
 
   revalidatePath('/tagging');
 }
@@ -53,11 +55,11 @@ export async function untagSong(songId: string): Promise<void> {
   removeSong(songId);
 
   if (song) {
-    // Delete tag and all sequences for this song
-    deleteTag(userId, song.spotifyUri)
-      .catch((err) => console.error('deleteTag failed:', err));
-    deleteSequencesForSong(userId, song.spotifyUri)
-      .catch((err) => console.error('deleteSequencesForSong failed:', err));
+    // Await both deletes before revalidating — same serverless reasoning as tagSong.
+    await Promise.all([
+      deleteTag(userId, song.spotifyUri),
+      deleteSequencesForSong(userId, song.spotifyUri),
+    ]);
   }
 
   revalidatePath('/tagging');
@@ -71,14 +73,14 @@ export async function changeSongCue(songId: string, newCue: Cue): Promise<void> 
 
   const song = getSong(songId);
   if (song) {
-    upsertTag({
+    await upsertTag({
       spotify_user_id: userId,
       spotify_uri: song.spotifyUri,
       title: song.title,
       artist: song.artist,
       duration_ms: song.durationMs,
       cue: newCue,
-    }).catch((err) => console.error('upsertTag (reassign) failed:', err));
+    });
   }
 
   revalidatePath('/tagging');
