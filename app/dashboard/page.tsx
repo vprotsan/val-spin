@@ -83,17 +83,6 @@ export default async function DashboardPage() {
         </Link>
 
         <Link
-          href="/playlist"
-          className="w-full flex items-center justify-between rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors px-5 py-4"
-        >
-          <div>
-            <p className="text-white font-medium text-base">Playlist Builder</p>
-            <p className="text-zinc-500 text-sm mt-0.5">Assemble cue segments · set running order</p>
-          </div>
-          <span className="text-zinc-500 text-xl">→</span>
-        </Link>
-
-        <Link
           href="/tagging"
           className="w-full flex items-center justify-between rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors px-5 py-4"
         >

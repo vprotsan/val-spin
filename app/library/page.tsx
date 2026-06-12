@@ -112,23 +112,29 @@ function PlaylistList({ playlists }: { playlists: SpotifyPlaylist[] }) {
 function PlaylistRow({ playlist }: { playlist: SpotifyPlaylist }) {
   const thumb = playlist.images?.[0]?.url;
   return (
-    <li className="flex items-center gap-3 py-3 border-b border-zinc-800/60 last:border-0">
-      {thumb ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={thumb} alt={playlist.name} className="w-11 h-11 rounded object-cover shrink-0 bg-zinc-800" />
-      ) : (
-        <div className="w-11 h-11 rounded bg-zinc-800 shrink-0 flex items-center justify-center text-zinc-600">
-          <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
-            <path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z" />
-          </svg>
+    <li>
+      <Link
+        href={`/library/playlist/${playlist.id}`}
+        className="flex items-center gap-3 py-3 border-b border-zinc-800/60 hover:bg-zinc-900/50 transition-colors -mx-4 px-4"
+      >
+        {thumb ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={thumb} alt={playlist.name} className="w-11 h-11 rounded object-cover shrink-0 bg-zinc-800" />
+        ) : (
+          <div className="w-11 h-11 rounded bg-zinc-800 shrink-0 flex items-center justify-center text-zinc-600">
+            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+              <path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z" />
+            </svg>
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-white text-base font-medium truncate">{playlist.name}</p>
+          <p className="text-zinc-400 text-sm truncate">
+            {playlist.owner.display_name} &middot; {playlist?.tracks?.total} tracks
+          </p>
         </div>
-      )}
-      <div className="flex-1 min-w-0">
-        <p className="text-white text-base font-medium truncate">{playlist.name}</p>
-        <p className="text-zinc-400 text-sm truncate">
-          {playlist.owner.display_name} &middot; {playlist?.tracks?.total} tracks
-        </p>
-      </div>
+        <span className="text-zinc-600 text-base shrink-0">→</span>
+      </Link>
     </li>
   );
 }
