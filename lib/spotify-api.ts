@@ -147,7 +147,7 @@ export async function getPlaylistWithTracks(
     name: meta.name,
     images: meta.images,
     owner: meta.owner,
-    total: meta.items.total,
+    total: meta.items?.total,
     tracks: tracks.slice(0, maxTracks),
   };
 }
