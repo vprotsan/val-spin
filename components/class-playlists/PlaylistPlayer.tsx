@@ -456,7 +456,7 @@ export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
       />
 
       {/* ── Sticky player bar ─────────────────────────────────────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-zinc-950/95 backdrop-blur-sm border-t border-zinc-800">
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-zinc-950/95 backdrop-blur-sm border-t border-zinc-800 min-h-[33vh] flex flex-col">
 
         {/* Segmented track line — full bleed, click to seek */}
         <SegmentedTrackBar
@@ -466,16 +466,36 @@ export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
           onSeek={handleSeek}
         />
 
-        <div className="max-w-lg mx-auto px-4 pt-4 pb-5 space-y-3">
+        <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-4 pt-3 pb-5">
 
-          {/* Active mark note — shown when playhead is inside a sequence */}
+          {/* Active mark note — fully visible, no scroll */}
           {status === 'ready' && activeSeq?.note && (
             <div
-              className="pl-2.5 border-l-2"
+              className="pl-2.5 border-l-2 mb-3"
               style={{ borderColor: activeColour ?? undefined }}
             >
               <p className="text-base text-zinc-300 leading-snug whitespace-pre-wrap">
                 {activeSeq.note}
+              </p>
+            </div>
+          )}
+
+          {/* Song info */}
+          {status === 'ready' && (
+            <div className="mb-2">
+              <p className="text-white text-base font-medium truncate leading-snug">
+                {currentSong.title}
+              </p>
+              <p className="text-zinc-500 text-sm truncate">
+                {currentSong.artist}
+                {playback && (
+                  <span className="ml-2 tabular-nums text-zinc-600">
+                    {fmtMs(positionMs)} / {fmtMs(durationMs)}
+                  </span>
+                )}
+                <span className="ml-2 text-zinc-700 tabular-nums">
+                  {currentIndex + 1} / {songs.length}
+                </span>
               </p>
             </div>
           )}
@@ -493,45 +513,27 @@ export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
             <p className="text-red-400 text-sm text-center py-1">{statusMsg}</p>
           )}
 
-          {/* Player controls */}
+          {/* Prev / Play-Pause / Next — 3 equal columns, pushed to bottom */}
           {status === 'ready' && (
-            <div className="flex items-center gap-3">
-
-              {/* Song info */}
-              <div className="flex-1 min-w-0">
-                <p className="text-white text-base font-medium truncate leading-snug">
-                  {currentSong.title}
-                </p>
-                <p className="text-zinc-500 text-sm truncate">
-                  {currentSong.artist}
-                  {playback && (
-                    <span className="ml-2 tabular-nums text-zinc-600">
-                      {fmtMs(positionMs)} / {fmtMs(durationMs)}
-                    </span>
-                  )}
-                </p>
-              </div>
-
-              {/* Queue position */}
-              <span className="text-zinc-700 text-sm tabular-nums shrink-0">
-                {currentIndex + 1} / {songs.length}
-              </span>
-
-              {/* Prev / Play-Pause / Next */}
-              <div className="flex items-center gap-1 shrink-0">
+            <div className="mt-auto grid grid-cols-3 items-center">
+              <div className="flex justify-center">
                 <CtrlBtn label="Previous" disabled={isAtStart} onClick={handlePrev}>
                   <PrevIcon />
                 </CtrlBtn>
+              </div>
 
+              <div className="flex justify-center">
                 <button
                   onClick={handlePlayPause}
-                  className="w-11 h-11 rounded-full bg-white flex items-center justify-center
-                             active:scale-95 transition-transform shrink-0 ml-1"
+                  className="w-16 h-16 rounded-full bg-white flex items-center justify-center
+                             active:scale-95 transition-transform"
                   aria-label={isPaused ? 'Play playlist' : 'Pause'}
                 >
                   {isPaused ? <PlayIcon /> : <PauseIcon />}
                 </button>
+              </div>
 
+              <div className="flex justify-center">
                 <CtrlBtn label="Next" disabled={isAtEnd} onClick={handleNext}>
                   <NextIcon />
                 </CtrlBtn>
@@ -557,7 +559,7 @@ function CtrlBtn({ children, label, disabled, onClick }: {
       aria-label={label}
       onClick={onClick}
       disabled={disabled}
-      className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors
+      className={`w-12 h-12 flex items-center justify-center rounded-full transition-colors
         ${disabled
           ? 'text-zinc-700 cursor-not-allowed'
           : 'text-zinc-400 hover:text-white hover:bg-zinc-800/80 active:scale-95 transition-transform'
@@ -571,15 +573,15 @@ function CtrlBtn({ children, label, disabled, onClick }: {
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
 function PlayIcon() {
-  return <svg viewBox="0 0 24 24" className="w-5 h-5 ml-0.5" fill="black"><path d="M8 5v14l11-7z" /></svg>;
+  return <svg viewBox="0 0 24 24" className="w-7 h-7 ml-0.5" fill="black"><path d="M8 5v14l11-7z" /></svg>;
 }
 function PauseIcon() {
-  return <svg viewBox="0 0 24 24" className="w-5 h-5" fill="black"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>;
+  return <svg viewBox="0 0 24 24" className="w-7 h-7" fill="black"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>;
 }
 function PrevIcon() {
-  return <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" /></svg>;
+  return <svg viewBox="0 0 24 24" className="w-7 h-7" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" /></svg>;
 }
 function NextIcon() {
-  return <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2z" /></svg>;
+  return <svg viewBox="0 0 24 24" className="w-7 h-7" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2z" /></svg>;
 }
 

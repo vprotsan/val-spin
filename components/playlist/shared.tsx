@@ -18,6 +18,22 @@ export const CUE_HEADER: Record<Cue, string> = {
   Flat:    'bg-sky-500/15 border-sky-700/40 text-sky-300',
 };
 
+const CUE_CARD_BORDER: Record<Cue, string> = {
+  Jumps:   'border-amber-700/40',
+  Climbs:  'border-emerald-700/40',
+  Sprints: 'border-red-700/40',
+  Choreo:  'border-purple-700/40',
+  Flat:    'border-sky-700/40',
+};
+
+const CUE_TAG: Record<Cue, string> = {
+  Jumps:   'bg-amber-500/20 text-amber-300',
+  Climbs:  'bg-emerald-500/20 text-emerald-300',
+  Sprints: 'bg-red-500/20 text-red-300',
+  Choreo:  'bg-purple-500/20 text-purple-300',
+  Flat:    'bg-sky-500/20 text-sky-300',
+};
+
 export const CUE_BTN: Record<Cue, string> = {
   Jumps:   'bg-amber-500/20 border-amber-600/50 text-amber-300 hover:bg-amber-500/30',
   Climbs:  'bg-emerald-500/20 border-emerald-600/50 text-emerald-300 hover:bg-emerald-500/30',
@@ -157,10 +173,9 @@ export function SegmentCard({
   if (!isEditing && showPicker) setShowPicker(false);
 
   return (
-    <div className={`rounded-2xl border overflow-hidden ${CUE_HEADER[segment.cue]}`}>
-      {/* Segment header */}
-      <div className={`flex items-center gap-1 px-3 py-3 border-b ${CUE_HEADER[segment.cue]}`}>
-        {/* Reorder arrows — edit mode only */}
+    <div className={`rounded-2xl border overflow-hidden ${CUE_CARD_BORDER[segment.cue]}`}>
+      {/* Tag row — edit controls left, cue tag + duration right */}
+      <div className="flex items-center gap-2 px-3 py-2">
         {isEditing && (
           <div className="flex flex-col gap-0.5 shrink-0">
             <MoveBtn
@@ -176,19 +191,20 @@ export function SegmentCard({
           </div>
         )}
 
-        <span className={`flex-1 font-bold text-base tracking-wide ${isEditing ? 'ml-1' : ''}`}>
+        <div className="flex-1" />
+
+        {duration > 0 && (
+          <span className="text-sm tabular-nums text-zinc-500">{fmtMs(duration)}</span>
+        )}
+
+        <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${CUE_TAG[segment.cue]}`}>
           {segment.cue}
         </span>
 
-        {duration > 0 && (
-          <span className="text-sm font-medium opacity-70 tabular-nums">{fmtMs(duration)}</span>
-        )}
-
-        {/* Delete button — edit mode only */}
         {isEditing && (
           <button
             onClick={() => onRemoveSegment(segment.id)}
-            className="ml-2 shrink-0 opacity-40 hover:opacity-80 text-2xl leading-none transition-opacity"
+            className="shrink-0 opacity-40 hover:opacity-80 text-2xl leading-none transition-opacity"
             aria-label="Remove segment"
           >
             ×

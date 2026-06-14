@@ -91,7 +91,7 @@ export default function PlaylistEditorPage({
   const totalSongs = segments.reduce((n, seg) => n + seg.songs.length, 0);
 
   return (
-    <main className="min-h-screen bg-black pb-36">
+    <main className="min-h-screen bg-black pb-[36vh]">
 
       {/* ── Sticky header ────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-10 bg-black/90 backdrop-blur-sm border-b border-zinc-800 px-4 pt-5 pb-4">

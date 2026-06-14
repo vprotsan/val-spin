@@ -93,7 +93,7 @@ export default async function DashboardPage() {
           <span className="text-zinc-500 text-xl">→</span>
         </Link>
 
-        <Link
+        {/* <Link
           href="/library"
           className="w-full flex items-center justify-between rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors px-5 py-4"
         >
@@ -102,9 +102,9 @@ export default async function DashboardPage() {
             <p className="text-zinc-500 text-sm mt-0.5">Saved tracks &amp; playlists</p>
           </div>
           <span className="text-zinc-500 text-xl">→</span>
-        </Link>
+        </Link> */}
 
-        <Link
+        {/* <Link
           href="/player"
           className="w-full flex items-center justify-between rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors px-5 py-4"
         >
@@ -113,13 +113,13 @@ export default async function DashboardPage() {
             <p className="text-zinc-500 text-sm mt-0.5">Full playback · live position</p>
           </div>
           <span className="text-zinc-500 text-xl">→</span>
-        </Link>
+        </Link> */}
 
         <a
           href="/api/auth/logout"
           className="block w-full rounded-full border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 py-3 text-base font-medium transition-colors text-center"
         >
-          Log out / Disconnect
+          Log out
         </a>
       </div>
     </main>
