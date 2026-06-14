@@ -139,12 +139,14 @@ export async function getPlaylistWithTracks(
     url = page.next;
   }
 
+  console.log(meta)
+
   return {
     id: meta.id,
     name: meta.name,
     images: meta.images,
     owner: meta.owner,
-    total: meta.tracks.total,
+    total: meta.items.total,
     tracks: tracks.slice(0, maxTracks),
   };
 }
