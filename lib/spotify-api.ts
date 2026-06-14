@@ -122,7 +122,7 @@ export async function getPlaylistWithTracks(
   // ── 2. Tracks (paginated via the dedicated endpoint) ────────────────────────
   const tracks: SpotifyTrack[] = [];
   let url: string | null =
-    `${BASE}/playlists/${encodedId}/items?limit=50`;
+    `${BASE}/playlists/${encodedId}/items`;
 
   while (url && tracks.length < maxTracks) {
     const res = await fetch(url, {
