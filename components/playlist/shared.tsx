@@ -152,7 +152,9 @@ export function SegmentCard({
   onAddSong,
   onRemoveSong,
   onMoveSong,
-  isEditing = true, // default true keeps existing PlaylistBuilder callers unchanged
+  isEditing = true,
+  flatOffset = -1,
+  activeFlatIndex = -1,
 }: {
   segment: Segment;
   segIdx: number;
@@ -164,18 +166,25 @@ export function SegmentCard({
   onRemoveSong: (segId: string, songId: string, idx: number) => void;
   onMoveSong: (segId: string, idx: number, dir: 'up' | 'down') => void;
   isEditing?: boolean;
+  flatOffset?: number;
+  activeFlatIndex?: number;
 }) {
   const [showPicker, setShowPicker] = useState(false);
   const duration = segDuration(segment);
   const inSegmentIds = new Set(segment.songs.map((s) => s.id));
 
+  const isSegmentActive =
+    flatOffset >= 0 &&
+    activeFlatIndex >= flatOffset &&
+    activeFlatIndex < flatOffset + segment.songs.length;
+
   // Close the picker if we leave edit mode while it's open
   if (!isEditing && showPicker) setShowPicker(false);
 
   return (
-    <div className={`rounded-2xl border overflow-hidden ${CUE_CARD_BORDER[segment.cue]}`}>
+    <div className={`rounded-2xl border overflow-hidden ${CUE_CARD_BORDER[segment.cue]} ${isSegmentActive ? 'ring-1 ring-white/20' : ''}`}>
       {/* Tag row — edit controls left, cue tag + duration right */}
-      <div className="flex items-center gap-2 px-3 py-2">
+      <div className={`flex items-center gap-2 px-3 py-2 ${isSegmentActive ? CUE_HEADER[segment.cue] : ''}`}>
         {isEditing && (
           <div className="flex flex-col gap-0.5 shrink-0">
             <MoveBtn
@@ -214,10 +223,12 @@ export function SegmentCard({
 
       {/* Songs */}
       <div className="bg-zinc-950/60">
-        {segment.songs.map((song, songIdx) => (
+        {segment.songs.map((song, songIdx) => {
+          const isSongActive = flatOffset >= 0 && flatOffset + songIdx === activeFlatIndex;
+          return (
           <div
             key={`${song.id}-${songIdx}`}
-            className={`flex items-start px-3 py-2.5 border-b border-zinc-800/60 last:border-0 ${isEditing ? 'gap-1' : ''}`}
+            className={`flex items-start px-3 py-2.5 border-b border-zinc-800/60 last:border-0 ${isEditing ? 'gap-1' : ''} ${isSongActive ? 'bg-white/10' : ''}`}
           >
             {/* Reorder arrows — edit mode only */}
             {isEditing && (
@@ -276,7 +287,8 @@ export function SegmentCard({
               </button>
             )}
           </div>
-        ))}
+          );
+        })}
 
         {segment.songs.length === 0 && (
           <p className="text-zinc-600 text-sm px-4 py-3">No songs yet.</p>

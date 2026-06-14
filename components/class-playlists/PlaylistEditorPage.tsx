@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { renamePlaylistAction } from '@/app/actions/savedPlaylists';
 import SavedPlaylistBuilder from './SavedPlaylistBuilder';
 import PlaylistPlayer from './PlaylistPlayer';
+import ThemeToggle from '@/components/ThemeToggle';
 import type { Cue, Segment, Song } from '@/types';
 
 export default function PlaylistEditorPage({
@@ -31,10 +32,11 @@ export default function PlaylistEditorPage({
   songsByCue: Record<Cue, Song[]>;
   savedAt: string; // ISO timestamp from Supabase
 }) {
-  const [isEditing, setIsEditing]   = useState(false);
-  const [name, setName]             = useState(initialName);
-  const [segments, setSegments]     = useState<Segment[]>(initialSegments);
-  const nameInputRef                = useRef<HTMLInputElement>(null);
+  const [isEditing, setIsEditing]       = useState(false);
+  const [name, setName]                 = useState(initialName);
+  const [segments, setSegments]         = useState<Segment[]>(initialSegments);
+  const [activeSongIndex, setActiveSongIndex] = useState(0);
+  const nameInputRef                    = useRef<HTMLInputElement>(null);
 
   // Player queue is fixed at page-load time (adding/removing songs requires
   // a reload to reflect in the queue — known v1 limitation).
@@ -136,6 +138,8 @@ export default function PlaylistEditorPage({
             </Link>
           )}
 
+          <ThemeToggle />
+
           {/* Edit / Done toggle */}
           {isEditing ? (
             <button
@@ -165,11 +169,12 @@ export default function PlaylistEditorPage({
           onSegmentsChange={setSegments}
           songsByCue={songsByCue}
           isEditing={isEditing}
+          activeFlatIndex={activeSongIndex}
         />
       </div>
 
       {/* ── Sticky playback bar ───────────────────────────────────────────── */}
-      <PlaylistPlayer songs={flatSongsForPlayer} />
+      <PlaylistPlayer songs={flatSongsForPlayer} onCurrentIndexChange={setActiveSongIndex} />
     </main>
   );
 }

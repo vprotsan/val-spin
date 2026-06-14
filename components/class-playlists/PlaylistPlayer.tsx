@@ -227,7 +227,13 @@ function SegmentedTrackBar({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
+export default function PlaylistPlayer({
+  songs,
+  onCurrentIndexChange,
+}: {
+  songs: Song[];
+  onCurrentIndexChange?: (idx: number) => void;
+}) {
   // Computed once on mount — safe because navigator.userAgent never changes mid-session
   const [isMobile]    = useState(detectMobile);
 
@@ -236,10 +242,11 @@ export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
   const tickRef        = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Ref mirrors for stale-closure safety inside SDK event listeners
-  const songsRef            = useRef(songs);
-  const currentIndexRef     = useRef(0);
-  const playbackRef         = useRef<PlaybackState | null>(null);
-  const hasStartedRef       = useRef(false);
+  const songsRef                  = useRef(songs);
+  const currentIndexRef           = useRef(0);
+  const playbackRef               = useRef<PlaybackState | null>(null);
+  const hasStartedRef             = useRef(false);
+  const onCurrentIndexChangeRef   = useRef(onCurrentIndexChange);
   // Timestamp of the last playAtIndex call — guards against the "instant
   // paused-at-0" false-positive that triggers rapid auto-advance when the SDK
   // fails to start (e.g. on mobile, or during a 404 retry).
@@ -250,10 +257,11 @@ export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [playback, setPlayback]         = useState<PlaybackState | null>(null);
 
-  // Keep ref mirrors in sync with state
-  useEffect(() => { songsRef.current = songs; },               [songs]);
-  useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
-  useEffect(() => { playbackRef.current = playback; },         [playback]);
+  // Keep ref mirrors in sync with state/props
+  useEffect(() => { songsRef.current = songs; },                           [songs]);
+  useEffect(() => { currentIndexRef.current = currentIndex; },             [currentIndex]);
+  useEffect(() => { playbackRef.current = playback; },                     [playback]);
+  useEffect(() => { onCurrentIndexChangeRef.current = onCurrentIndexChange; }, [onCurrentIndexChange]);
 
   // ── Progress ticker (250 ms) ────────────────────────────────────────────────
 
@@ -299,6 +307,7 @@ export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
     }
 
     setCurrentIndex(idx);
+    onCurrentIndexChangeRef.current?.(idx);
     hasStartedRef.current = true;
     lastPlayStartedAtRef.current = Date.now(); // stamp for auto-advance guard
   }, []);
@@ -375,6 +384,7 @@ export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
         } else {
           hasStartedRef.current = false;
           setCurrentIndex(0);
+          onCurrentIndexChangeRef.current?.(0);
         }
       }
     });
@@ -424,7 +434,7 @@ export default function PlaylistPlayer({ songs }: { songs: Song[] }) {
   // the REST API to control a Spotify client running in the background on the
   // same device (or any other active Spotify device).
   if (isMobile) {
-    return <ConnectPlayer songs={songs} />;
+    return <ConnectPlayer songs={songs} onCurrentIndexChange={onCurrentIndexChange} />;
   }
 
   const currentSong  = songs[currentIndex];

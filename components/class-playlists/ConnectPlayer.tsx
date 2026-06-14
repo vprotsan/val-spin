@@ -161,7 +161,13 @@ function deviceIcon(type: string): string {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function ConnectPlayer({ songs }: { songs: Song[] }) {
+export default function ConnectPlayer({
+  songs,
+  onCurrentIndexChange,
+}: {
+  songs: Song[];
+  onCurrentIndexChange?: (idx: number) => void;
+}) {
   const [devices, setDevices]                       = useState<SpotifyDevice[]>([]);
   const [selectedDeviceId, setSelectedDeviceId]     = useState<string | null>(null);
   const [selectedDeviceName, setSelectedDeviceName] = useState('');
@@ -173,9 +179,11 @@ export default function ConnectPlayer({ songs }: { songs: Song[] }) {
   const [loadingDevices, setLoadingDevices]         = useState(true);
   const [error, setError]                           = useState('');
 
-  const tickRef      = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollRef      = useRef<ReturnType<typeof setInterval> | null>(null);
-  const isPlayingRef = useRef(false);
+  const tickRef                  = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollRef                  = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isPlayingRef             = useRef(false);
+  const onCurrentIndexChangeRef  = useRef(onCurrentIndexChange);
+  useEffect(() => { onCurrentIndexChangeRef.current = onCurrentIndexChange; }, [onCurrentIndexChange]);
 
   const uris = useMemo(() => songs.map((s) => s.spotifyUri), [songs]);
 
@@ -217,7 +225,10 @@ export default function ConnectPlayer({ songs }: { songs: Song[] }) {
 
       // Sync which song is playing
       const idx = uris.indexOf(state.item.uri);
-      if (idx >= 0 && idx !== currentIndex) setCurrentIndex(idx);
+      if (idx >= 0 && idx !== currentIndex) {
+        setCurrentIndex(idx);
+        onCurrentIndexChangeRef.current?.(idx);
+      }
 
       // Update device info if it changed
       if (state.device) {
@@ -284,6 +295,7 @@ export default function ConnectPlayer({ songs }: { songs: Song[] }) {
 
       // Update UI optimistically so it feels instant
       setCurrentIndex(idx);
+      onCurrentIndexChangeRef.current?.(idx);
       setHasStarted(true);
       setPositionMs(0);
 
@@ -365,6 +377,7 @@ export default function ConnectPlayer({ songs }: { songs: Song[] }) {
       } catch { /* non-fatal */ }
     }
     setCurrentIndex(next);
+    onCurrentIndexChangeRef.current?.(next);
   }, [currentIndex, songs.length, hasStarted]);
 
   const handlePrev = useCallback(async () => {
@@ -379,6 +392,7 @@ export default function ConnectPlayer({ songs }: { songs: Song[] }) {
       try { const token = await fetchToken(); await apiPrevious(token); } catch { /* non-fatal */ }
     }
     setCurrentIndex(prev);
+    onCurrentIndexChangeRef.current?.(prev);
   }, [positionMs, currentIndex, hasStarted]);
 
   const handleSeek = useCallback(async (ms: number) => {
@@ -438,7 +452,7 @@ export default function ConnectPlayer({ songs }: { songs: Song[] }) {
         <div className="absolute bg-white rounded-full shadow" style={{ top: '6px', width: '16px', height: '16px', left: `${progress * 100}%`, transform: 'translateX(-50%)', pointerEvents: 'none' }} />
       </div>
 
-      <div className="max-w-lg mx-auto px-4 pt-4 pb-5 space-y-3">
+      <div className="max-w-lg mx-auto px-4 pt-12 pb-30 space-y-3">
 
         {/* Active mark note */}
         {activeSeq?.note && (
@@ -494,26 +508,26 @@ export default function ConnectPlayer({ songs }: { songs: Song[] }) {
 
         {/* Player controls — shown once a device is selected */}
         {selectedDeviceId && (
-          <div className="flex items-center gap-3">
-
-            {/* Current song info */}
-            <div className="flex-1 min-w-0">
-              <p className="text-white text-base font-medium truncate leading-snug">{currentSong.title}</p>
-              <p className="text-zinc-500 text-sm truncate">
-                {currentSong.artist}
+          <div className="flex-col gap-3">
+            <p className="text-zinc-500 text-sm truncate">
                 {hasStarted && (
-                  <span className="ml-2 tabular-nums text-zinc-600">
+                  <span className="ml-2 tabular-nums text-xl text-zinc-100">
                     {fmtMs(positionMs)} / {fmtMs(effectiveDur)}
                   </span>
                 )}
+            </p>
+
+            {/* Current song info */}
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-xl font-medium truncate leading-snug">{currentSong.title}</p>
+              <p className="text-zinc-500 text-sm truncate">
+                {currentSong.artist}
+                {/* {hasStarted && (
+                  <span className="ml-2 tabular-nums text-xl text-zinc-600">
+                    {fmtMs(positionMs)} / {fmtMs(effectiveDur)}
+                  </span>
+                )} */}
               </p>
-              {/* Device indicator — tap to change */}
-              <button
-                onClick={() => setSelectedDeviceId(null)}
-                className="text-zinc-700 text-sm hover:text-zinc-400 transition-colors truncate max-w-full text-left"
-              >
-                ▸ {selectedDeviceName}
-              </button>
             </div>
 
             {/* Queue position */}
@@ -522,14 +536,14 @@ export default function ConnectPlayer({ songs }: { songs: Song[] }) {
             </span>
 
             {/* Controls */}
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-10 shrink-0">
               <ConnCtrlBtn label="Previous" disabled={isAtStart} onClick={handlePrev}>
                 <PrevIcon />
               </ConnCtrlBtn>
 
               <button
                 onClick={handlePlayPause}
-                className="w-11 h-11 rounded-full bg-white flex items-center justify-center active:scale-95 transition-transform shrink-0 ml-1"
+                className="w-25 h-25 rounded-full bg-white flex items-center justify-center active:scale-95 transition-transform shrink-0 ml-1"
                 aria-label={isPlaying ? 'Pause' : 'Play playlist'}
               >
                 {isPlaying ? <PauseIcon /> : <PlayIcon />}
@@ -539,6 +553,13 @@ export default function ConnectPlayer({ songs }: { songs: Song[] }) {
                 <NextIcon />
               </ConnCtrlBtn>
             </div>
+            {/* Device indicator — tap to change */}
+              <button
+                onClick={() => setSelectedDeviceId(null)}
+                className="text-zinc-700 text-sm hover:text-zinc-400 transition-colors truncate max-w-full text-left"
+              >
+                ▸ {selectedDeviceName}
+              </button>
           </div>
         )}
       </div>
@@ -556,7 +577,7 @@ function ConnCtrlBtn({ children, label, disabled, onClick }: {
       aria-label={label}
       onClick={onClick}
       disabled={disabled}
-      className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors
+      className={`w-18 h-18 flex items-center justify-center rounded-full transition-colors
         ${disabled ? 'text-zinc-700 cursor-not-allowed' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/80 active:scale-95'}`}
     >
       {children}
@@ -564,7 +585,7 @@ function ConnCtrlBtn({ children, label, disabled, onClick }: {
   );
 }
 
-function PlayIcon()  { return <svg viewBox="0 0 24 24" className="w-5 h-5 ml-0.5" fill="black"><path d="M8 5v14l11-7z"/></svg>; }
-function PauseIcon() { return <svg viewBox="0 0 24 24" className="w-5 h-5" fill="black"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>; }
-function PrevIcon()  { return <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>; }
-function NextIcon()  { return <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2z"/></svg>; }
+function PlayIcon()  { return <svg viewBox="0 0 24 24" className="w-15 h-15 ml-0.5" fill="black"><path d="M8 5v14l11-7z"/></svg>; }
+function PauseIcon() { return <svg viewBox="0 0 24 24" className="w-15 h-15" fill="black"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>; }
+function PrevIcon()  { return <svg viewBox="0 0 24 24" className="w-15 h-15" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>; }
+function NextIcon()  { return <svg viewBox="0 0 24 24" className="w-15 h-15" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2z"/></svg>; }

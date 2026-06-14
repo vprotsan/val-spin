@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition, useCallback } from 'react';
+import { useTransition, useCallback, type ReactNode } from 'react';
 import {
   spAddSegmentAction,
   spRemoveSegmentAction,
@@ -29,12 +29,14 @@ export default function SavedPlaylistBuilder({
   onSegmentsChange,
   songsByCue,
   isEditing,
+  activeFlatIndex = -1,
 }: {
   playlistId: string;
   segments: Segment[];
   onSegmentsChange: (segments: Segment[]) => void;
   songsByCue: Record<Cue, Song[]>;
   isEditing: boolean;
+  activeFlatIndex?: number;
 }) {
   const [addingCuePicker, setAddingCuePicker] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -97,21 +99,29 @@ export default function SavedPlaylistBuilder({
       </p>
 
       {/* Segment list */}
-      {segments.map((seg, segIdx) => (
-        <SegmentCard
-          key={seg.id}
-          segment={seg}
-          segIdx={segIdx}
-          totalSegments={segments.length}
-          availableSongs={songsByCue[seg.cue] ?? []}
-          onMoveSegment={handleMoveSegment}
-          onRemoveSegment={handleRemoveSegment}
-          onAddSong={handleAddSong}
-          onRemoveSong={handleRemoveSong}
-          onMoveSong={handleMoveSong}
-          isEditing={isEditing}
-        />
-      ))}
+      {segments.reduce<{ els: React.ReactNode[]; offset: number }>(
+        ({ els, offset }, seg, segIdx) => {
+          els.push(
+            <SegmentCard
+              key={seg.id}
+              segment={seg}
+              segIdx={segIdx}
+              totalSegments={segments.length}
+              availableSongs={songsByCue[seg.cue] ?? []}
+              onMoveSegment={handleMoveSegment}
+              onRemoveSegment={handleRemoveSegment}
+              onAddSong={handleAddSong}
+              onRemoveSong={handleRemoveSong}
+              onMoveSong={handleMoveSong}
+              isEditing={isEditing}
+              flatOffset={offset}
+              activeFlatIndex={activeFlatIndex}
+            />,
+          );
+          return { els, offset: offset + seg.songs.length };
+        },
+        { els: [] as ReactNode[], offset: 0 },
+      ).els}
 
       {segments.length === 0 && (
         <p className="text-zinc-600 text-base text-center py-8">
