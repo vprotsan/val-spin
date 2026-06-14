@@ -14,7 +14,8 @@ export async function GET(request: Request) {
     const playlist = await getPlaylistWithTracks(id, token, 200);
     return Response.json({ tracks: playlist.tracks, name: playlist.name });
   } catch (err) {
-    console.error('[playlist-tracks]', err);
-    return Response.json({ error: 'Failed to load playlist tracks' }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[playlist-tracks]', message);
+    return Response.json({ error: 'Failed to load playlist tracks', detail: message }, { status: 500 });
   }
 }
