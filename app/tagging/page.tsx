@@ -17,27 +17,35 @@ export default async function TaggingPage({
   const token = await getValidAccessToken();
   if (!token) redirect('/api/auth/clear');
 
-  // Hydrate from Supabase if the server restarted since last login
   const userId = await getSpotifyUserId();
   if (userId) await ensureHydrated(userId);
 
   const { cue: cueParam } = await searchParams;
-  const selectedCue: Cue = CUE_TYPES.includes(cueParam as Cue)
+
+  // null = "All" (default); a valid Cue string = filtered view
+  const selectedCue: Cue | null = CUE_TYPES.includes(cueParam as Cue)
     ? (cueParam as Cue)
-    : 'Jumps';
+    : null;
 
-  // Read from the in-memory store (now guaranteed to be populated)
-  const allSongs = getAllSongs();
-  const taggedForCue = getSongsByCue(selectedCue);
+  const allSongs = getAllSongs().sort((a, b) => a.title.localeCompare(b.title));
 
-  // Counts for the cue cards
+  // Songs to display — all when no filter, or filtered by cue
+  const displayedSongs = selectedCue
+    ? getSongsByCue(selectedCue)
+    : allSongs;
+
+  // Per-cue counts for the filter tiles
   const counts = Object.fromEntries(
     CUE_TYPES.map((c) => [c, allSongs.filter((s) => s.cue === c).length])
   ) as Record<Cue, number>;
 
-  // Build a map of spotifyUri → cue for the Add Song sheet
+  // Map of spotifyUri → cue for the Add Song sheet
   const taggedUris: Record<string, Cue> = {};
   for (const song of allSongs) taggedUris[song.spotifyUri] = song.cue;
+
+  const sectionLabel = selectedCue
+    ? `${selectedCue} — ${displayedSongs.length} ${displayedSongs.length === 1 ? 'song' : 'songs'}`
+    : `All — ${allSongs.length} ${allSongs.length === 1 ? 'song' : 'songs'}`;
 
   return (
     <main className="min-h-screen bg-black pb-24">
@@ -56,28 +64,37 @@ export default async function TaggingPage({
         </div>
       </header>
 
-      <div className="max-w-lg mx-auto px-4 pt-5 space-y-6">
-        {/* Cue cards */}
-        <CueGrid selectedCue={selectedCue} counts={counts} />
+      <div className="max-w-lg mx-auto px-4 pt-5 space-y-5">
+        {/* Cue filter tiles — horizontal scrollable row */}
+        <CueGrid
+          selectedCue={selectedCue}
+          counts={counts}
+          totalCount={allSongs.length}
+        />
 
-        {/* Add Song button (Client Component) */}
-        <AddSongSheet defaultCue={selectedCue} taggedUris={taggedUris} />
+        {/* Add Song button */}
+        <AddSongSheet
+          defaultCue={selectedCue ?? 'Jumps'}
+          taggedUris={taggedUris}
+        />
 
-        {/* Tagged songs for the selected cue */}
+        {/* Song list */}
         <section>
-          <h2 className="text-zinc-400 text-sm font-semibold uppercase tracking-widest mb-1">
-            {selectedCue} — {taggedForCue.length} {taggedForCue.length === 1 ? 'song' : 'songs'}
+          <h2 className="text-zinc-500 text-sm font-semibold uppercase tracking-widest mb-1">
+            {sectionLabel}
           </h2>
 
-          {taggedForCue.length === 0 ? (
+          {displayedSongs.length === 0 ? (
             <p className="text-zinc-600 text-base py-8 text-center">
-              No songs tagged as {selectedCue} yet.
+              {selectedCue
+                ? `No songs tagged as ${selectedCue} yet.`
+                : 'No songs tagged yet.'}
               <br />
               <span className="text-zinc-700">Tap &ldquo;Add Song&rdquo; to get started.</span>
             </p>
           ) : (
             <ul>
-              {taggedForCue.map((song) => (
+              {displayedSongs.map((song) => (
                 <TaggedSongRow key={song.id} song={song} />
               ))}
             </ul>
