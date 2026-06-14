@@ -88,7 +88,7 @@ export interface PlaylistDetail {
 }
 
 interface PlaylistTracksPage {
-  items: { track: SpotifyTrack | null }[];
+  items: { item: SpotifyTrack | null }[];
   next: string | null;
   total: number;
 }
@@ -120,7 +120,6 @@ export async function getPlaylistWithTracks(
     token,
   );
 
-  console.log('meta->', meta)
 
   // ── 2. Tracks (paginated via the dedicated endpoint) ────────────────────────
   const tracks: SpotifyTrack[] = [];
@@ -134,16 +133,14 @@ export async function getPlaylistWithTracks(
     });
     if (!res.ok) throw new Error(`Spotify playlist tracks → ${res.status}`);
     const page = (await res.json()) as PlaylistTracksPage;
-    console.log('page-->', page)
     tracks.push(
       ...page.items
-        .map((i: { item: SpotifyTrack | null }) => i.item)
+        .map((i) => i.item)
         .filter((t: SpotifyTrack | null): t is SpotifyTrack => !!t?.id),
     );
     url = page.next;
   }
 
-  console.log('tracks ->', tracks)
 
   return {
     id: meta.id,
