@@ -114,11 +114,13 @@ export async function getPlaylistWithTracks(
     images: { url: string }[];
     owner: { display_name: string };
     tracks: { total: number };
-    items: { total: number };
+    items?: { total: number };
   }>(
-    `/playlists/${encodedId}?fields=id%2Cname%2Cimages%2Cowner%2Ctracks.total`,
+    `/playlists/${encodedId}`,
     token,
   );
+
+  console.log('meta->', meta)
 
   // ── 2. Tracks (paginated via the dedicated endpoint) ────────────────────────
   const tracks: SpotifyTrack[] = [];
@@ -132,15 +134,16 @@ export async function getPlaylistWithTracks(
     });
     if (!res.ok) throw new Error(`Spotify playlist tracks → ${res.status}`);
     const page = (await res.json()) as PlaylistTracksPage;
+    console.log('page-->', page)
     tracks.push(
       ...page.items
-        .map((i: { track: SpotifyTrack | null }) => i.track)
+        .map((i: { item: SpotifyTrack | null }) => i.item)
         .filter((t: SpotifyTrack | null): t is SpotifyTrack => !!t?.id),
     );
     url = page.next;
   }
 
-  console.log(meta)
+  console.log('tracks ->', tracks)
 
   return {
     id: meta.id,
