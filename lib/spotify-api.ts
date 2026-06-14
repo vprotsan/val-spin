@@ -114,6 +114,7 @@ export async function getPlaylistWithTracks(
     images: { url: string }[];
     owner: { display_name: string };
     tracks: { total: number };
+    items: { total: number };
   }>(
     `/playlists/${encodedId}?fields=id%2Cname%2Cimages%2Cowner%2Ctracks.total`,
     token,
