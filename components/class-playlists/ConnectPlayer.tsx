@@ -440,24 +440,24 @@ export default function ConnectPlayer({
         ref={barRef}
         onClick={handleBarClick}
         className="relative w-full cursor-pointer select-none"
-        style={{ height: '28px' }}
+        style={{ height: '48px' }}
         role="slider"
         aria-label="Seek in track"
         aria-valuenow={positionMs}
         aria-valuemin={0}
         aria-valuemax={effectiveDur}
       >
-        <div className="absolute left-0 right-0 rounded-sm" style={{ top: '10px', height: '8px', background: gradient }} />
-        <div className="absolute right-0 rounded-r-sm bg-black/60" style={{ top: '10px', height: '8px', left: `${progress * 100}%` }} />
-        <div className="absolute bg-white rounded-full shadow" style={{ top: '6px', width: '16px', height: '16px', left: `${progress * 100}%`, transform: 'translateX(-50%)', pointerEvents: 'none' }} />
+        <div className="absolute left-0 right-0 rounded-sm" style={{ top: '16px', height: '18px', background: gradient }} />
+        <div className="absolute right-0 rounded-r-sm bg-black/60" style={{ top: '16px', height: '18px', left: `${progress * 100}%` }} />
+        <div className="absolute bg-white rounded-full shadow" style={{ top: '13px', width: '26px', height: '26px', left: `${progress * 100}%`, transform: 'translateX(-50%)', pointerEvents: 'none' }} />
       </div>
 
-      <div className="max-w-lg mx-auto px-4 pt-12 pb-30 space-y-3">
+      <div className="max-w-lg mx-auto px-4 pt-5 pb-10 space-y-3">
 
         {/* Active mark note */}
         {activeSeq?.note && (
           <div className="pl-2.5 border-l-2" style={{ borderColor: activeColour ?? undefined }}>
-            <p className="text-base text-zinc-300 leading-snug whitespace-pre-wrap">{activeSeq.note}</p>
+            <p className="text-xl text-zinc-300 leading-snug whitespace-pre-wrap">{activeSeq.note}</p>
           </div>
         )}
 
@@ -509,13 +509,21 @@ export default function ConnectPlayer({
         {/* Player controls — shown once a device is selected */}
         {selectedDeviceId && (
           <div className="flex-col gap-3">
-            <p className="text-zinc-500 text-sm truncate">
-                {hasStarted && (
-                  <span className="ml-2 tabular-nums text-xl text-zinc-100">
-                    {fmtMs(positionMs)} / {fmtMs(effectiveDur)}
-                  </span>
-                )}
-            </p>
+
+            <div className="flex justify-between gap-2">
+              {/* Queue position */}
+              <span className="text-zinc-700 text-sm tabular-nums shrink-0">
+                {currentIndex + 1} / {songs.length}
+              </span>
+
+              <p className="text-zinc-500 text-sm truncate">
+                  {hasStarted && (
+                    <span className="ml-2 tabular-nums text-xl text-zinc-100">
+                      {fmtMs(positionMs)} / {fmtMs(effectiveDur)}
+                    </span>
+                  )}
+              </p>
+            </div>
 
             {/* Current song info */}
             <div className="flex-1 min-w-0">
@@ -530,13 +538,8 @@ export default function ConnectPlayer({
               </p>
             </div>
 
-            {/* Queue position */}
-            <span className="text-zinc-700 text-sm tabular-nums shrink-0">
-              {currentIndex + 1} / {songs.length}
-            </span>
-
             {/* Controls */}
-            <div className="flex items-center gap-10 shrink-0">
+            <div className="flex items-center justify-center justify-items-center gap-10 shrink-0">
               <ConnCtrlBtn label="Previous" disabled={isAtStart} onClick={handlePrev}>
                 <PrevIcon />
               </ConnCtrlBtn>
