@@ -493,39 +493,51 @@ export default function PlaylistPlayer({
           {/* Active mark note — fully visible, no scroll */}
           {status === 'ready' && activeSeq?.note && (
             <div
-              className="pl-2.5 border-l-2 mb-3"
+              className="pl-2.5 border-l-2 mb-3 flex justify-between"
               style={{ borderColor: activeColour ?? undefined }}
             >
-              <p className="text-base text-zinc-300 leading-snug whitespace-pre-wrap">
+              <p className="text-4xl text-zinc-300 leading-snug whitespace-pre-wrap">
                 {activeSeq.note}
               </p>
-            </div>
-          )}
-
-          {/* Song info */}
-          {status === 'ready' && (
-            <div className="mb-2">
-              <p className="text-white text-base font-medium truncate leading-snug">
-                {currentSong.title}
-              </p>
-              <p className="text-zinc-500 text-sm truncate">
-                {currentSong.artist}
-                {playback && (
-                  <span className="ml-2 tabular-nums text-zinc-600">
-                    {fmtMs(positionMs)} / {fmtMs(durationMs)}
-                  </span>
-                )}
-                <span className="ml-2 text-zinc-700 tabular-nums">
-                  {currentIndex + 1} / {songs.length}
-                </span>
-              </p>
               {!isPaused && playback && (
-                <p className="text-zinc-500 text-sm tabular-nums mt-0.5">
-                  {countdownLabel} in {fmtMs(countdownMs)}
+                <p className="text-zinc-100 text-4xl tabular-nums mt-0.5">
+                  {fmtMs(countdownMs)}
                 </p>
               )}
             </div>
           )}
+          <div className="flex justify-end">
+            {!isPaused && !activeSeq?.note && playback && (
+              <p className="text-zinc-100 text-4xl tabular-nums mt-0.5">
+                {fmtMs(countdownMs)}
+              </p>
+            )}
+          </div>
+
+          {/* Song info */}
+          {status === 'ready' && (
+            <div className="mb-2">
+              <p className="flex justify-between">
+                {playback && (
+                  <span className="ml-2 tabular-nums text-3xl text-zinc-600">
+                    {fmtMs(positionMs)} / {fmtMs(durationMs)}
+                  </span>
+                )}
+                <span className="ml-2 text-zinc-700 text-3xl tabular-nums">
+                  {currentIndex + 1} / {songs.length}
+                </span>
+              </p>
+            </div>
+          )}
+
+          <div className="flex flex-col">
+            <p className="text-white text-base font-medium truncate leading-snug">
+                {currentSong.title}
+              </p>
+              <p className="text-zinc-500 text-sm truncate">
+                {currentSong.artist}
+              </p>
+          </div>
 
           {/* Status messages */}
           {status === 'loading' && (

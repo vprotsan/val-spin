@@ -271,12 +271,12 @@ export function SegmentCard({
                     const mm = Math.floor(durSec / 60);
                     const ss = String(durSec % 60).padStart(2, '0');
                     return (
-                      <p key={seq.id} className="text-zinc-600 text-sm tabular-nums leading-snug">
+                      <p key={seq.id} className="text-zinc-600 text-xl tabular-nums leading-snug">
                         {fmtMs(seq.startMs)}–{fmtMs(seq.endMs)}
                         <span className="text-zinc-700 mx-1">·</span>
-                        {mm}:{ss}
+                        <span className="font-bold text-zinc-300">{mm}:{ss}</span>
                         {seq.note && (
-                          <span className="text-zinc-500 ml-2 not-italic font-normal">{seq.note}</span>
+                          <span className="text-zinc-200 text-xl ml-2 not-italic font-normal">&nbsp;{seq.note}</span>
                         )}
                       </p>
                     );
