@@ -173,24 +173,25 @@ export function SegmentCard({
   const duration = segDuration(segment);
   const inSegmentIds = new Set(segment.songs.map((s) => s.id));
   const activeSongRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (activeFlatIndex < 0 || flatOffset < 0) return;
-    const localIdx = activeFlatIndex - flatOffset;
-    if (localIdx < 0 || localIdx >= segment.songs.length) return;
-    activeSongRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [activeFlatIndex, flatOffset, segment.songs.length]);
+  const segmentRef = useRef<HTMLDivElement | null>(null);
 
   const isSegmentActive =
     flatOffset >= 0 &&
     activeFlatIndex >= flatOffset &&
     activeFlatIndex < flatOffset + segment.songs.length;
 
+  useEffect(() => {
+    if (activeFlatIndex < 0 || flatOffset < 0) return;
+    const localIdx = activeFlatIndex - flatOffset;
+    if (localIdx < 0 || localIdx >= segment.songs.length) return;
+    segmentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [activeFlatIndex, flatOffset, segment.songs.length]);
+
   // Close the picker if we leave edit mode while it's open
   if (!isEditing && showPicker) setShowPicker(false);
 
   return (
-    <div className={`rounded-2xl border overflow-hidden ${CUE_CARD_BORDER[segment.cue]} ${isSegmentActive ? 'ring-1 ring-white/20' : ''}`}>
+    <div ref={segmentRef} style={isSegmentActive ? { scrollMarginTop: '8rem' } : undefined} className={`rounded-2xl border overflow-hidden ${CUE_CARD_BORDER[segment.cue]} ${isSegmentActive ? 'ring-1 ring-white/20' : ''}`}>
       {/* Tag row — edit controls left, cue tag + duration right */}
       <div className={`flex items-center gap-2 px-3 py-2 ${isSegmentActive ? CUE_HEADER[segment.cue] : ''}`}>
         {isEditing && (

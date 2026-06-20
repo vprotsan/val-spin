@@ -530,14 +530,14 @@ export default function PlaylistPlayer({
             </div>
           )}
 
-          <div className="flex flex-col">
+          {/* <div className="flex flex-col">
             <p className="text-white text-base font-medium truncate leading-snug">
                 {currentSong.title}
               </p>
               <p className="text-zinc-500 text-sm truncate">
                 {currentSong.artist}
               </p>
-          </div>
+          </div> */}
 
           {/* Status messages */}
           {status === 'loading' && (
