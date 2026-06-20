@@ -454,6 +454,18 @@ export default function PlaylistPlayer({
     ? MARK_COLOURS[activeSeqIndex % MARK_COLOURS.length]
     : null;
 
+  // Countdown logic:
+  // - inside a cue → time until this cue ends
+  // - between cues → time until next cue starts
+  // - after all cues (or no cues) → time until song ends
+  const nextSeq = sequences.find((seq) => seq.startMs > positionMs);
+  const countdownMs = activeSeq
+    ? activeSeq.endMs - positionMs
+    : nextSeq
+      ? nextSeq.startMs - positionMs
+      : durationMs - positionMs;
+  const countdownLabel = activeSeq ? 'cue ends' : nextSeq ? 'next cue' : 'song ends';
+
   return (
     <>
       <Script
@@ -507,6 +519,11 @@ export default function PlaylistPlayer({
                   {currentIndex + 1} / {songs.length}
                 </span>
               </p>
+              {!isPaused && playback && (
+                <p className="text-zinc-500 text-sm tabular-nums mt-0.5">
+                  {countdownLabel} in {fmtMs(countdownMs)}
+                </p>
+              )}
             </div>
           )}
 

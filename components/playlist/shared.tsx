@@ -5,7 +5,7 @@
  * and SavedPlaylistBuilder (Supabase-direct).
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Cue, Segment, Song } from '@/types';
 
 // ── Cue colour tokens ─────────────────────────────────────────────────────────
@@ -172,6 +172,14 @@ export function SegmentCard({
   const [showPicker, setShowPicker] = useState(false);
   const duration = segDuration(segment);
   const inSegmentIds = new Set(segment.songs.map((s) => s.id));
+  const activeSongRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (activeFlatIndex < 0 || flatOffset < 0) return;
+    const localIdx = activeFlatIndex - flatOffset;
+    if (localIdx < 0 || localIdx >= segment.songs.length) return;
+    activeSongRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [activeFlatIndex, flatOffset, segment.songs.length]);
 
   const isSegmentActive =
     flatOffset >= 0 &&
@@ -228,6 +236,7 @@ export function SegmentCard({
           return (
           <div
             key={`${song.id}-${songIdx}`}
+            ref={isSongActive ? activeSongRef : undefined}
             className={`flex items-start px-3 py-2.5 border-b border-zinc-800/60 last:border-0 ${isEditing ? 'gap-1' : ''} ${isSongActive ? 'bg-white/10' : ''}`}
           >
             {/* Reorder arrows — edit mode only */}
