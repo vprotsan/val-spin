@@ -41,7 +41,7 @@ export default function TaggedSongRow({ song }: { song: Song }) {
         </div>
 
         {/* Info — tap to open sequence editor */}
-        <Link href={`/songs/${song.id}`} className="flex-1 min-w-0 group">
+        <Link href={`/songs/${encodeURIComponent(song.spotifyUri)}`} className="flex-1 min-w-0 group">
           <p className="text-white text-base font-medium truncate group-hover:text-zinc-200">{song.title}</p>
           <p className="text-zinc-400 text-sm truncate">
             {song.artist}

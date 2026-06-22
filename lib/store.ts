@@ -74,6 +74,13 @@ export function hasSongByUri(spotifyUri: string): boolean {
   return false;
 }
 
+export function getSongByUri(spotifyUri: string): Song | undefined {
+  for (const song of getStore().songs.values()) {
+    if (song.spotifyUri === spotifyUri) return song;
+  }
+  return undefined;
+}
+
 export function getPlaylist(): Playlist {
   return getStore().playlist;
 }

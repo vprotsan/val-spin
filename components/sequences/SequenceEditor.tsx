@@ -195,7 +195,7 @@ export default function SequenceEditor({ song }: { song: Song }) {
 
     setMarkError('');
     startMarkTransition(async () => {
-      const result = await addSequenceAction(song.id, pendingStartMs, endMs, pendingNote || undefined);
+      const result = await addSequenceAction(song.spotifyUri, pendingStartMs, endMs, pendingNote || undefined);
       if (!result.ok) { setMarkError(result.error); return; }
       setSequences((prev) =>
         [...prev, { id: result.sequenceId, startMs: pendingStartMs, endMs, ...(pendingNote.trim() ? { note: pendingNote.trim() } : {}) }]
@@ -212,7 +212,7 @@ export default function SequenceEditor({ song }: { song: Song }) {
   // ── Delete sequence ────────────────────────────────────────────────────────
   const handleDelete = useCallback((seqId: string) => {
     setSequences((prev) => prev.filter((s) => s.id !== seqId));
-    deleteSequenceAction(song.id, seqId);
+    deleteSequenceAction(song.spotifyUri, seqId);
   }, [song.id]);
 
   // ── Save edited sequence ───────────────────────────────────────────────────
@@ -228,7 +228,7 @@ export default function SequenceEditor({ song }: { song: Song }) {
     if (endMs === null) { return 'Invalid end time (use m:ss)'; }
     if (endMs <= startMs) { return 'End must be after start'; }
 
-    const result = await updateSequenceAction(song.id, seqId, startMs, endMs, noteVal || undefined);
+    const result = await updateSequenceAction(song.spotifyUri, seqId, startMs, endMs, noteVal || undefined);
     if (!result.ok) return result.error;
 
     setSequences((prev) =>
