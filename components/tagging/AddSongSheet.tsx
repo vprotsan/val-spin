@@ -39,6 +39,13 @@ function fmtMs(ms: number): string {
 
 export default function AddSongSheet({ defaultCue, taggedUris }: Props) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+
+  const handleTagged = useCallback(() => {
+    setOpen(false);
+    router.refresh();
+  }, [router]);
+
   return (
     <>
       <button
@@ -48,7 +55,7 @@ export default function AddSongSheet({ defaultCue, taggedUris }: Props) {
         <span className="text-xl leading-none">+</span> Add Song
       </button>
       {open && (
-        <Sheet defaultCue={defaultCue} taggedUris={taggedUris} onClose={() => setOpen(false)} />
+        <Sheet defaultCue={defaultCue} taggedUris={taggedUris} onClose={() => setOpen(false)} onTagged={handleTagged} />
       )}
     </>
   );
@@ -58,7 +65,7 @@ export default function AddSongSheet({ defaultCue, taggedUris }: Props) {
 
 type Tab = 'library' | 'playlists' | 'search';
 
-function Sheet({ defaultCue, taggedUris, onClose }: Props & { onClose: () => void }) {
+function Sheet({ defaultCue, taggedUris, onClose, onTagged }: Props & { onClose: () => void; onTagged: () => void }) {
   const [tab, setTab] = useState<Tab>('library');
 
   // ── Library state ──────────────────────────────────────────────────────────
@@ -279,7 +286,7 @@ function Sheet({ defaultCue, taggedUris, onClose }: Props & { onClose: () => voi
                     track={track}
                     defaultCue={defaultCue}
                     currentTag={taggedUris[track.uri]}
-                    onTagged={onClose}
+                    onTagged={onTagged}
                   />
                 ))}
               </ul>
@@ -317,7 +324,7 @@ function Sheet({ defaultCue, taggedUris, onClose }: Props & { onClose: () => voi
                     track={track}
                     defaultCue={defaultCue}
                     currentTag={taggedUris[track.uri]}
-                    onTagged={onClose}
+                    onTagged={onTagged}
                   />
                 ))}
               </ul>
@@ -360,7 +367,6 @@ function TrackRow({
   currentTag: Cue | undefined;
   onTagged: () => void;
 }) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [expanded, setExpanded] = useState(false);
   const [localTag, setLocalTag] = useState<Cue | undefined>(currentTag);
@@ -381,7 +387,6 @@ function TrackRow({
       });
       setLocalTag(cue);
       setExpanded(false);
-      router.refresh();
       onTagged();
     });
   }

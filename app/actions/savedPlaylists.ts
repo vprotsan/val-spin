@@ -51,6 +51,7 @@ function buildSongMap(tags: TagRows, seqsByUri: SeqMap): Map<string, Song> {
         cue: t.cue,
         bpm: null,
         sequences,
+        taggedAt: 0,
       };
       return [t.spotify_uri, song];
     }),

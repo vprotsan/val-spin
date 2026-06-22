@@ -59,11 +59,11 @@ export function getSong(id: string): Song | undefined {
   return getStore().songs.get(id);
 }
 
-/** Returns songs tagged to the given cue, sorted by title. */
+/** Returns songs tagged to the given cue, newest first. */
 export function getSongsByCue(cue: Cue): Song[] {
   return getAllSongs()
     .filter((s) => s.cue === cue)
-    .sort((a, b) => a.title.localeCompare(b.title));
+    .sort((a, b) => b.taggedAt - a.taggedAt);
 }
 
 /** Returns true if a song with the given Spotify URI is already tagged. */
@@ -90,6 +90,7 @@ export interface AddSongInput {
   durationMs: number;
   spotifyUri: string;
   cue: Cue;
+  taggedAt?: number;
 }
 
 /**
@@ -119,8 +120,9 @@ export function addSong(input: AddSongInput): Song {
     durationMs: input.durationMs,
     spotifyUri: input.spotifyUri,
     cue: input.cue,
-    bpm: null, // reserved for future BPM support; always null in v1
+    bpm: null,
     sequences: [],
+    taggedAt: input.taggedAt ?? Date.now(),
   };
   store.songs.set(song.id, song);
   return song;

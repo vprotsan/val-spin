@@ -37,6 +37,7 @@ export async function ensureHydrated(spotifyUserId: string): Promise<void> {
         durationMs: tag.duration_ms,
         spotifyUri: tag.spotify_uri,
         cue: tag.cue,
+        taggedAt: tag.created_at ? new Date(tag.created_at).getTime() : 0,
       });
     }
   }

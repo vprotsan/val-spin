@@ -19,19 +19,29 @@ async function fetchToken(): Promise<string> {
 }
 
 async function transferPlayback(deviceId: string, token: string) {
-  await fetch('https://api.spotify.com/v1/me/player', {
+  const res = await fetch('https://api.spotify.com/v1/me/player', {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ device_ids: [deviceId], play: false }),
   });
+  if (!res.ok && res.status !== 204) {
+    throw new Error(`Transfer playback failed: ${res.status}`);
+  }
 }
 
-async function playSong(uri: string, deviceId: string, positionMs: number, token: string) {
-  await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+async function playSong(uri: string, deviceId: string, positionMs: number, token: string): Promise<string | null> {
+  const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ uris: [uri], position_ms: positionMs }),
   });
+  if (!res.ok && res.status !== 204) {
+    const body = await res.json().catch(() => ({}));
+    if (res.status === 403) return 'Spotify Premium is required for playback.';
+    if (res.status === 404) return 'Player device not found — try reloading the page.';
+    return body?.error?.message ?? `Playback failed (${res.status})`;
+  }
+  return null;
 }
 
 // ── Formatting ─────────────────────────────────────────────────────────────────
@@ -143,7 +153,8 @@ export default function SequenceEditor({ song }: { song: Song }) {
     if (!deviceIdRef.current) return;
     const token = await fetchToken();
     const posMs = (isThisSongActive && playback) ? playback.positionMs : 0;
-    await playSong(song.spotifyUri, deviceIdRef.current, posMs, token);
+    const err = await playSong(song.spotifyUri, deviceIdRef.current, posMs, token);
+    if (err) setPlayerError(err);
   }, [song.spotifyUri, isThisSongActive, playback]);
 
   const handleToggle = useCallback(async () => {
@@ -270,7 +281,7 @@ export default function SequenceEditor({ song }: { song: Song }) {
           {playerStatus === 'connecting' && (
             <p className="text-zinc-500 text-base animate-pulse">Connecting…</p>
           )}
-          {playerStatus === 'error' && (
+          {(playerStatus === 'error' || (playerStatus === 'ready' && playerError)) && (
             <p className="text-red-400 text-base bg-red-950/30 rounded-lg px-3 py-2">{playerError}</p>
           )}
 

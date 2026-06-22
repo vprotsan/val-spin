@@ -46,6 +46,7 @@ export default async function SavedPlaylistPage({
         cue: t.cue,
         bpm: null,
         sequences,
+        taggedAt: 0,
       };
       return [t.spotify_uri, song];
     }),

@@ -9,14 +9,16 @@ export interface TagRow {
   artist: string;
   duration_ms: number;
   cue: Cue;
+  created_at?: string;
 }
 
-/** Load all tagged songs for a user from Supabase. */
+/** Load all tagged songs for a user from Supabase, oldest first. */
 export async function loadTagsForUser(userId: string): Promise<TagRow[]> {
   const { data, error } = await supabase
     .from('song_tags')
-    .select('spotify_user_id, spotify_uri, title, artist, duration_ms, cue')
-    .eq('spotify_user_id', userId);
+    .select('spotify_user_id, spotify_uri, title, artist, duration_ms, cue, created_at')
+    .eq('spotify_user_id', userId)
+    .order('created_at', { ascending: true });
   if (error) throw new Error(`loadTagsForUser: ${error.message}`);
   return (data ?? []) as TagRow[];
 }

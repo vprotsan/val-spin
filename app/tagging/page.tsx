@@ -27,7 +27,7 @@ export default async function TaggingPage({
     ? (cueParam as Cue)
     : null;
 
-  const allSongs = getAllSongs().sort((a, b) => a.title.localeCompare(b.title));
+  const allSongs = getAllSongs().sort((a, b) => b.taggedAt - a.taggedAt);
 
   // Songs to display — all when no filter, or filtered by cue
   const displayedSongs = selectedCue

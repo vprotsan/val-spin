@@ -26,6 +26,7 @@ export interface Song {
   cue: Cue;
   bpm: number | null; // reserved for future BPM support; always null in v1
   sequences: Sequence[]; // sorted by startMs; non-overlapping invariant enforced by store
+  taggedAt: number; // ms timestamp — used for "newest first" sort
 }
 
 // ── Segment ───────────────────────────────────────────────────────────────────
