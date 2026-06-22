@@ -1,6 +1,7 @@
 import { redirect, notFound } from 'next/navigation';
-import { getValidAccessToken } from '@/lib/spotify-auth';
+import { getValidAccessToken, getSpotifyUserId } from '@/lib/spotify-auth';
 import { getSong } from '@/lib/store';
+import { ensureHydrated } from '@/lib/db/hydrate';
 import SequenceEditor from '@/components/sequences/SequenceEditor';
 
 export default async function SongSequencePage({
@@ -10,6 +11,9 @@ export default async function SongSequencePage({
 }) {
   const token = await getValidAccessToken();
   if (!token) redirect('/api/auth/clear');
+
+  const userId = await getSpotifyUserId();
+  if (userId) await ensureHydrated(userId);
 
   const { id } = await params;
   const song = getSong(id);
