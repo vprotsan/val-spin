@@ -495,11 +495,11 @@ export default function PlaylistPlayer({
             <div className="mb-2">
               <p className="flex justify-between">
                 {playback && (
-                  <span className="ml-2 tabular-nums text-3xl text-zinc-600">
+                  <span className="ml-2 tabular-nums text-xl text-zinc-600">
                     {fmtMs(positionMs)} / {fmtMs(durationMs)}
                   </span>
                 )}
-                <span className="ml-2 text-zinc-700 text-3xl tabular-nums">
+                <span className="ml-2 text-zinc-700 text-xl tabular-nums">
                   {currentIndex + 1} / {songs.length}
                 </span>
               </p>
@@ -523,17 +523,17 @@ export default function PlaylistPlayer({
                     }`}
                     style={isActive ? { borderLeft: `3px solid ${colour}` } : { borderLeft: '3px solid transparent' }}
                   >
-                    <p className={`text-base leading-snug flex-1 ${isActive ? 'text-white font-medium' : 'text-zinc-400'}`}>
+                    <p className={`text-xl leading-snug flex-1 ${isActive ? 'text-white font-medium' : 'text-zinc-400'}`}>
                       {seq.note}
                     </p>
                     <div className="text-right shrink-0 tabular-nums">
                       {isActive && remaining !== null ? (
                         <>
                           <p className="text-white text-2xl font-semibold">{fmtMs(Math.max(0, remaining))}</p>
-                          <p className="text-zinc-500 text-xs">of {fmtMs(seqDurationMs)}</p>
+                          <p className="text-zinc-500 text-xl">of {fmtMs(seqDurationMs)}</p>
                         </>
                       ) : (
-                        <p className="text-zinc-500 text-base">{fmtMs(seqDurationMs)}</p>
+                        <p className="text-zinc-500 text-xl">{fmtMs(seqDurationMs)}</p>
                       )}
                     </div>
                   </div>
