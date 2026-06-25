@@ -452,7 +452,7 @@ export default function ConnectPlayer({
         <div className="absolute bg-white rounded-full shadow" style={{ top: '13px', width: '26px', height: '26px', left: `${progress * 100}%`, transform: 'translateX(-50%)', pointerEvents: 'none' }} />
       </div>
 
-      <div className="max-w-lg mx-auto px-4 pt-5 pb-10 space-y-3">
+      <div className="max-w-lg mx-auto px-4 pt-2 pb-3 space-y-3">
 
         {/* Active mark note */}
         {activeSeq?.note && (
@@ -527,15 +527,15 @@ export default function ConnectPlayer({
 
             {/* Current song info */}
             <div className="flex-1 min-w-0">
-              <p className="text-white text-xl font-medium truncate leading-snug">{currentSong.title}</p>
-              <p className="text-zinc-500 text-sm truncate">
-                {currentSong.artist}
+              {/* <p className="text-white text-xl font-medium truncate leading-snug">{currentSong.title}</p> */}
+              {/* <p className="text-zinc-500 text-sm truncate"> */}
+                {/* {currentSong.artist} */}
                 {/* {hasStarted && (
                   <span className="ml-2 tabular-nums text-xl text-zinc-600">
                     {fmtMs(positionMs)} / {fmtMs(effectiveDur)}
                   </span>
                 )} */}
-              </p>
+              {/* </p> */}
             </div>
 
             {/* Controls */}

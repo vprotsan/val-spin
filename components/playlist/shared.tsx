@@ -238,7 +238,7 @@ export function SegmentCard({
           <div
             key={`${song.id}-${songIdx}`}
             ref={isSongActive ? activeSongRef : undefined}
-            className={`flex items-start px-3 py-2.5 border-b border-zinc-800/60 last:border-0 ${isEditing ? 'gap-1' : ''} ${isSongActive ? 'bg-white/10' : ''}`}
+            className={`flex items-start px-3 py-2.5 border-b border-zinc-800/60 last:border-0 ${isEditing ? 'gap-1' : ''} ${isSongActive ? 'bg-white/30' : ''}`}
           >
             {/* Reorder arrows — edit mode only */}
             {isEditing && (
@@ -261,7 +261,7 @@ export function SegmentCard({
               <p className="text-white text-base font-medium truncate">{song.title}</p>
               <p className="text-zinc-400 text-sm truncate">
                 {song.artist}
-                <span className="text-zinc-600 ml-2 tabular-nums">{fmtMs(song.durationMs)}</span>
+                <span className="${isSongActive ? 'text-zinc-200' : 'text-zinc-600'} ml-2 tabular-nums">{fmtMs(song.durationMs)}</span>
               </p>
 
               {/* Sequences: start–end · duration · note */}
