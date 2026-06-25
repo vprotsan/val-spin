@@ -34,7 +34,7 @@ export default async function DashboardPage() {
   return (
     <main className="min-h-screen bg-black px-6 py-10">
       <div className="max-w-sm mx-auto flex flex-col gap-6">
-        <h1 className="text-3xl font-bold text-white">Connected ✓</h1>
+        <h1 className="text-xl font-bold text-white">Connected ✓</h1>
 
         <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-5 flex items-center gap-4">
           {user.images?.[0]?.url ? (
