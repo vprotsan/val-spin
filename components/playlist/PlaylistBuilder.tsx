@@ -108,9 +108,7 @@ export default function PlaylistBuilder({
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div className={`space-y-4 transition-opacity ${isPending ? 'opacity-70' : ''}`}>
-      {/* Summary */}
       <p className="text-zinc-500 text-sm">
-        {segments.length} {segments.length === 1 ? 'segment' : 'segments'}
         {totalMs > 0 && <> &middot; {fmtMs(totalMs)} total</>}
       </p>
 

@@ -115,7 +115,7 @@ export default function PlaylistEditorPage({
             ) : (
               <h1 className="text-2xl font-bold text-white truncate">{name}</h1>
             )}
-            <p className="text-zinc-500 text-sm mt-0.5">
+            {/* <p className="text-zinc-500 text-sm mt-0.5">
               {segments.length} {segments.length === 1 ? 'segment' : 'segments'}
               {totalSongs > 0 && (
                 <> &middot; {totalSongs} {totalSongs === 1 ? 'song' : 'songs'}</>
@@ -125,7 +125,7 @@ export default function PlaylistEditorPage({
                   month: 'short', day: 'numeric', year: 'numeric',
                 })}
               </span>
-            </p>
+            </p> */}
           </div>
 
           {/* Back link — hidden in edit mode to reduce noise */}
