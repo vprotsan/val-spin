@@ -50,7 +50,7 @@ export default async function PlaylistTracksPage({
 
   return (
     <main className="min-h-screen bg-black pb-24">
-      <header className="sticky top-0 z-10 bg-black/90 backdrop-blur-sm border-b border-zinc-800 px-4 pt-5 pb-4">
+      <header className="sticky top-0 z-10 bg-black/90 backdrop-blur-sm border-b border-zinc-800 px-4 pt-3 pb-2">
         <div className="max-w-lg mx-auto flex items-center gap-3">
           {/* Playlist thumbnail */}
           {thumb ? (

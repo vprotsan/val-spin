@@ -31,7 +31,7 @@ export default async function PlaylistPage() {
         </div>
       </header>
 
-      <div className="max-w-lg mx-auto px-4 pt-5">
+      <div className="max-w-lg mx-auto px-4 pt-2">
         {/* PlaylistBuilder owns all client state including SaveToSpotify */}
         <PlaylistBuilder
           initialSegments={playlist.segments}

@@ -18,6 +18,7 @@ import SavedPlaylistBuilder from './SavedPlaylistBuilder';
 import PlaylistPlayer from './PlaylistPlayer';
 import ThemeToggle from '@/components/ThemeToggle';
 import type { Cue, Segment, Song } from '@/types';
+import { fmtMs, segDuration } from '../playlist/shared';
 
 export default function PlaylistEditorPage({
   playlistId,
@@ -89,15 +90,24 @@ export default function PlaylistEditorPage({
   );
 
   // ── Derived subtitle values ────────────────────────────────────────────────
-
-  const totalSongs = segments.reduce((n, seg) => n + seg.songs.length, 0);
+  const totalMs = segments.reduce((sum, s) => sum + segDuration(s), 0);
 
   return (
     <main className="min-h-screen bg-black pb-[36vh]">
 
       {/* ── Sticky header ────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-10 bg-black/90 backdrop-blur-sm border-b border-zinc-800 px-4 pt-5 pb-4">
+      <header className="sticky top-0 z-10 bg-black/90 backdrop-blur-sm border-b border-zinc-800 px-4 pt-3 pb-2">
         <div className="max-w-lg mx-auto flex items-center gap-3">
+
+           {/* Back link — hidden in edit mode to reduce noise */}
+          {!isEditing && (
+            <Link
+              href="/class-playlists"
+              className="text-zinc-400 hover:text-white text-base transition-colors shrink-0"
+            >
+              ← 
+            </Link>
+          )}
 
           {/* Name + subtitle — fills available width */}
           <div className="flex-1 min-w-0">
@@ -113,8 +123,15 @@ export default function PlaylistEditorPage({
                 aria-label="Playlist name"
               />
             ) : (
+              <div className="flex">
               <h1 className="text-2xl font-bold text-white truncate">{name}</h1>
+               <p className="text-zinc-500 text-sm">
+                {totalMs > 0 && <> &middot; {fmtMs(totalMs)} total</>}
+              </p>
+              </div>
             )}
+
+
             {/* <p className="text-zinc-500 text-sm mt-0.5">
               {segments.length} {segments.length === 1 ? 'segment' : 'segments'}
               {totalSongs > 0 && (
@@ -128,17 +145,8 @@ export default function PlaylistEditorPage({
             </p> */}
           </div>
 
-          {/* Back link — hidden in edit mode to reduce noise */}
-          {!isEditing && (
-            <Link
-              href="/class-playlists"
-              className="text-zinc-400 hover:text-white text-base transition-colors shrink-0"
-            >
-              ← Playlists
-            </Link>
-          )}
 
-          <ThemeToggle />
+          {/* <ThemeToggle /> */}
 
           {/* Edit / Done toggle */}
           {isEditing ? (
@@ -162,7 +170,7 @@ export default function PlaylistEditorPage({
       </header>
 
       {/* ── Content ──────────────────────────────────────────────────────── */}
-      <div className="max-w-lg mx-auto px-4 pt-5">
+      <div className="max-w-lg mx-auto px-4 pt-2">
         <SavedPlaylistBuilder
           playlistId={playlistId}
           segments={segments}

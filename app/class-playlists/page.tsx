@@ -31,7 +31,7 @@ export default async function ClassPlaylistsPage() {
 
   return (
     <main className="min-h-screen bg-black pb-24">
-      <header className="sticky top-0 z-10 bg-black/90 backdrop-blur-sm border-b border-zinc-800 px-4 pt-5 pb-4">
+      <header className="sticky top-0 z-10 bg-black/90 backdrop-blur-sm border-b border-zinc-800 px-4 pt-3 pb-2">
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white">Class Playlists</h1>
@@ -45,7 +45,7 @@ export default async function ClassPlaylistsPage() {
         </div>
       </header>
 
-      <div className="max-w-lg mx-auto px-4 pt-5">
+      <div className="max-w-lg mx-auto px-4 pt-2">
         <PlaylistListClient initialPlaylists={playlists} durationsMs={durationsMs} />
       </div>
     </main>

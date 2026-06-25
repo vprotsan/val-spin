@@ -50,7 +50,7 @@ export default async function TaggingPage({
   return (
     <main className="min-h-screen bg-black pb-24">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-black/90 backdrop-blur-sm border-b border-zinc-800 px-4 pt-5 pb-4">
+      <header className="sticky top-0 z-10 bg-black/90 backdrop-blur-sm border-b border-zinc-800 px-4 pt-3 pb-2">
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white">Song Tags</h1>
