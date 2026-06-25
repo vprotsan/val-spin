@@ -263,27 +263,6 @@ export function SegmentCard({
                 {song.artist}
                 <span className="${isSongActive ? 'text-zinc-200' : 'text-zinc-600'} ml-2 tabular-nums">{fmtMs(song.durationMs)}</span>
               </p>
-
-              {/* Sequences: start–end · duration · note */}
-              {song.sequences.length > 0 && (
-                <div className="mt-1 space-y-0.5">
-                  {song.sequences.map((seq) => {
-                    const durSec = Math.round((seq.endMs - seq.startMs) / 1000);
-                    const mm = Math.floor(durSec / 60);
-                    const ss = String(durSec % 60).padStart(2, '0');
-                    return (
-                      <p key={seq.id} className="text-zinc-600 text-xl tabular-nums leading-snug">
-                        {fmtMs(seq.startMs)}–{fmtMs(seq.endMs)}
-                        <span className="text-zinc-700 mx-1">·</span>
-                        <span className="font-bold text-zinc-300">{mm}:{ss}</span>
-                        {seq.note && (
-                          <span className="text-zinc-200 text-xl ml-2 not-italic font-normal">&nbsp;{seq.note}</span>
-                        )}
-                      </p>
-                    );
-                  })}
-                </div>
-              )}
             </div>
 
             {/* Delete button — edit mode only */}

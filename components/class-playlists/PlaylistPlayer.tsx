@@ -490,30 +490,6 @@ export default function PlaylistPlayer({
 
         <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-4 pt-3 pb-5">
 
-          {/* Active mark note — fully visible, no scroll */}
-          {status === 'ready' && activeSeq?.note && (
-            <div
-              className="pl-2.5 border-l-2 mb-3 flex justify-between"
-              style={{ borderColor: activeColour ?? undefined }}
-            >
-              <p className="text-4xl text-zinc-300 leading-snug whitespace-pre-wrap">
-                {activeSeq.note}
-              </p>
-              {!isPaused && playback && (
-                <p className="text-zinc-100 text-4xl tabular-nums mt-0.5">
-                  {fmtMs(countdownMs)}
-                </p>
-              )}
-            </div>
-          )}
-          <div className="flex justify-end">
-            {!isPaused && !activeSeq?.note && playback && (
-              <p className="text-zinc-100 text-4xl tabular-nums mt-0.5">
-                {fmtMs(countdownMs)}
-              </p>
-            )}
-          </div>
-
           {/* Song info */}
           {status === 'ready' && (
             <div className="mb-2">
@@ -527,6 +503,52 @@ export default function PlaylistPlayer({
                   {currentIndex + 1} / {songs.length}
                 </span>
               </p>
+            </div>
+          )}
+
+          {/* All sequence notes — scrollable list, active one highlighted */}
+          {status === 'ready' && sequences.some((s) => s.note) && (
+            <div className="flex-1 overflow-y-auto mb-2 space-y-1 min-h-0">
+              {sequences.map((seq, i) => {
+                if (!seq.note) return null;
+                const isActive = seq === activeSeq;
+                const colour = MARK_COLOURS[i % MARK_COLOURS.length];
+                const seqDurationMs = seq.endMs - seq.startMs;
+                const remaining = isActive ? seq.endMs - positionMs : null;
+                return (
+                  <div
+                    key={seq.id}
+                    className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 transition-colors ${
+                      isActive ? 'bg-zinc-800' : 'opacity-50'
+                    }`}
+                    style={isActive ? { borderLeft: `3px solid ${colour}` } : { borderLeft: '3px solid transparent' }}
+                  >
+                    <p className={`text-base leading-snug flex-1 ${isActive ? 'text-white font-medium' : 'text-zinc-400'}`}>
+                      {seq.note}
+                    </p>
+                    <div className="text-right shrink-0 tabular-nums">
+                      {isActive && remaining !== null ? (
+                        <>
+                          <p className="text-white text-2xl font-semibold">{fmtMs(Math.max(0, remaining))}</p>
+                          <p className="text-zinc-500 text-xs">of {fmtMs(seqDurationMs)}</p>
+                        </>
+                      ) : (
+                        <p className="text-zinc-500 text-base">{fmtMs(seqDurationMs)}</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Standalone countdown when between cues or no notes on song */}
+          {status === 'ready' && !activeSeq && playback && (
+            <div className="flex justify-end mb-2">
+              <div className="text-right">
+                <p className="text-zinc-100 text-4xl tabular-nums">{fmtMs(countdownMs)}</p>
+                <p className="text-zinc-500 text-sm">{countdownLabel}</p>
+              </div>
             </div>
           )}
 
