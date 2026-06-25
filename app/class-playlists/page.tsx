@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getValidAccessToken, getSpotifyUserId } from '@/lib/spotify-auth';
 import { listPlaylistsForUser } from '@/lib/db/playlists';
+import { loadTagsForUser } from '@/lib/db/tags';
 import PlaylistListClient from '@/components/class-playlists/PlaylistListClient';
 
 export default async function ClassPlaylistsPage() {
@@ -11,7 +12,22 @@ export default async function ClassPlaylistsPage() {
   ]);
   if (!token || !userId) redirect('/api/auth/clear');
 
-  const playlists = await listPlaylistsForUser(userId);
+  const [playlists, tags] = await Promise.all([
+    listPlaylistsForUser(userId),
+    loadTagsForUser(userId),
+  ]);
+
+  // uri → duration_ms lookup for computing playlist totals
+  const durationByUri = new Map(tags.map((t) => [t.spotify_uri, t.duration_ms]));
+
+  // Pre-compute total duration (ms) per playlist
+  const durationsMs: Record<string, number> = {};
+  for (const pl of playlists) {
+    durationsMs[pl.id] = pl.segments.reduce(
+      (sum, seg) => sum + seg.songUris.reduce((s, uri) => s + (durationByUri.get(uri) ?? 0), 0),
+      0,
+    );
+  }
 
   return (
     <main className="min-h-screen bg-black pb-24">
@@ -30,7 +46,7 @@ export default async function ClassPlaylistsPage() {
       </header>
 
       <div className="max-w-lg mx-auto px-4 pt-5">
-        <PlaylistListClient initialPlaylists={playlists} />
+        <PlaylistListClient initialPlaylists={playlists} durationsMs={durationsMs} />
       </div>
     </main>
   );

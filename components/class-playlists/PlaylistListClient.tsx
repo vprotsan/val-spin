@@ -5,22 +5,26 @@ import { useRouter } from 'next/navigation';
 import { createPlaylistAction, deletePlaylistAction } from '@/app/actions/savedPlaylists';
 import type { PlaylistRow, StoredSegment } from '@/lib/db/playlists';
 
-function fmtDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
 function totalSongCount(segments: StoredSegment[]): number {
   return segments.reduce((n, s) => n + s.songUris.length, 0);
 }
 
+function fmtDuration(ms: number): string {
+  const totalSecs = Math.round(ms / 1000);
+  const h = Math.floor(totalSecs / 3600);
+  const m = Math.floor((totalSecs % 3600) / 60);
+  const s = totalSecs % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
 export default function PlaylistListClient({
   initialPlaylists,
+  durationsMs,
 }: {
   initialPlaylists: PlaylistRow[];
+  durationsMs: Record<string, number>;
 }) {
   const router = useRouter();
   const [playlists, setPlaylists] = useState<PlaylistRow[]>(initialPlaylists);
@@ -68,6 +72,7 @@ export default function PlaylistListClient({
 
       {playlists.map((pl) => {
         const songs = totalSongCount(pl.segments);
+        const totalMs = durationsMs[pl.id] ?? 0;
         const isDeleting = deletingId === pl.id;
         return (
           <div
@@ -90,9 +95,9 @@ export default function PlaylistListClient({
               <div className="flex-1 min-w-0">
                 <p className="text-white font-medium text-base truncate">{pl.name}</p>
                 <p className="text-zinc-500 text-sm mt-0.5">
-                  {pl.segments.length} {pl.segments.length === 1 ? 'segment' : 'segments'}
-                  {songs > 0 && <> &middot; {songs} {songs === 1 ? 'song' : 'songs'}</>}
-                  <span className="ml-2 text-zinc-700">{fmtDate(pl.updated_at)}</span>
+                  {songs > 0
+                    ? <>{songs} {songs === 1 ? 'song' : 'songs'} &middot; {fmtDuration(totalMs)}</>
+                    : 'Empty'}
                 </p>
               </div>
 
