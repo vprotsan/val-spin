@@ -19,11 +19,11 @@ export const CUE_HEADER: Record<Cue, string> = {
 };
 
 const CUE_CARD_BORDER: Record<Cue, string> = {
-  Jumps:   'border-amber-700/40',
-  Climbs:  'border-emerald-700/40',
-  Sprints: 'border-red-700/40',
-  Choreo:  'border-purple-700/40',
-  Flat:    'border-sky-700/40',
+  Jumps:   'border-amber-300/40',
+  Climbs:  'border-emerald-300/40',
+  Sprints: 'border-red-300/40',
+  Choreo:  'border-purple-300/40',
+  Flat:    'border-sky-300/40',
 };
 
 const CUE_TAG: Record<Cue, string> = {
@@ -211,24 +211,24 @@ export function SegmentCard({
 
         <div className="flex-1" />
 
-        {duration > 0 && (
-          <span className="text-sm tabular-nums text-zinc-500">{fmtMs(duration)}</span>
-        )}
+            {/* {duration > 0 && (
+              <span className="text-sm tabular-nums text-zinc-500">{fmtMs(duration)}</span>
+            )} */}
 
-        <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${CUE_TAG[segment.cue]}`}>
-          {segment.cue}
-        </span>
+            {/* <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${CUE_TAG[segment.cue]}`}>
+              {segment.cue}
+            </span> */}
 
-        {isEditing && (
-          <button
-            onClick={() => onRemoveSegment(segment.id)}
-            className="shrink-0 opacity-40 hover:opacity-80 text-2xl leading-none transition-opacity"
-            aria-label="Remove segment"
-          >
-            ×
-          </button>
-        )}
-      </div>
+            {isEditing && (
+              <button
+                onClick={() => onRemoveSegment(segment.id)}
+                className="shrink-0 opacity-40 hover:opacity-80 text-2xl leading-none transition-opacity"
+                aria-label="Remove segment"
+              >
+                ×
+              </button>
+            )}
+          </div>
 
       {/* Songs */}
       <div className="bg-zinc-950/60">

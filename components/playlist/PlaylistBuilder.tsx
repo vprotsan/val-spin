@@ -107,7 +107,7 @@ export default function PlaylistBuilder({
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <div className={`space-y-4 transition-opacity ${isPending ? 'opacity-70' : ''}`}>
+    <div className={`space-y-1 transition-opacity ${isPending ? 'opacity-70' : ''}`}>
       {/* Segment list */}
       {segments.map((seg, segIdx) => (
         <SegmentCard

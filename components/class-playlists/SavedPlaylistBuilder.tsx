@@ -90,7 +90,7 @@ export default function SavedPlaylistBuilder({
   );
 
   return (
-    <div className={`space-y-4 transition-opacity ${isPending ? 'opacity-60 pointer-events-none' : ''}`}>
+    <div className={`space-y-1 transition-opacity ${isPending ? 'opacity-60 pointer-events-none' : ''}`}>
       <p className="text-zinc-500 text-sm">
         {isPending && <span className="ml-2 text-zinc-600">saving…</span>}
       </p>
