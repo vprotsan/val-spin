@@ -414,6 +414,14 @@ export default function ConnectPlayer({
   const activeSeq      = activeSeqIndex >= 0 ? sequences[activeSeqIndex] : null;
   const activeColour   = activeSeqIndex >= 0 ? MARK_COLOURS[activeSeqIndex % MARK_COLOURS.length] : null;
 
+  const nextSeq      = sequences.find((s) => s.startMs > positionMs);
+  const countdownMs  = activeSeq
+    ? activeSeq.endMs - positionMs
+    : nextSeq
+      ? nextSeq.startMs - positionMs
+      : effectiveDur - positionMs;
+  const countdownLabel = activeSeq ? 'cue ends' : nextSeq ? 'next cue' : 'song ends';
+
   const gradient = useMemo(
     () => buildGradient(sequences, effectiveDur),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -433,13 +441,13 @@ export default function ConnectPlayer({
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-30 bg-zinc-950/95 backdrop-blur-sm border-t border-zinc-800">
+    <div className="fixed bottom-0 left-0 right-0 z-30 bg-zinc-950/95 backdrop-blur-sm border-t border-zinc-800 min-h-[33vh] flex flex-col">
 
       {/* Track progress line */}
       <div
         ref={barRef}
         onClick={handleBarClick}
-        className="relative w-full cursor-pointer select-none"
+        className="relative w-full cursor-pointer select-none shrink-0"
         style={{ height: '48px' }}
         role="slider"
         aria-label="Seek in track"
@@ -452,18 +460,69 @@ export default function ConnectPlayer({
         <div className="absolute bg-white rounded-full shadow" style={{ top: '13px', width: '26px', height: '26px', left: `${progress * 100}%`, transform: 'translateX(-50%)', pointerEvents: 'none' }} />
       </div>
 
-      <div className="max-w-lg mx-auto px-4 pt-2 pb-3 space-y-3">
+      <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-4 pt-3 pb-5 min-h-0">
 
-        {/* Active mark note */}
-        {activeSeq?.note && (
-          <div className="pl-2.5 border-l-2" style={{ borderColor: activeColour ?? undefined }}>
-            <p className="text-xl text-zinc-300 leading-snug whitespace-pre-wrap">{activeSeq.note}</p>
+        {/* Song info */}
+        <div className="mb-2 flex justify-between">
+          {hasStarted && (
+            <span className="tabular-nums text-3xl text-zinc-600">
+              {fmtMs(positionMs)} / {fmtMs(effectiveDur)}
+            </span>
+          )}
+          <span className="text-zinc-700 text-3xl tabular-nums ml-auto">
+            {currentIndex + 1} / {songs.length}
+          </span>
+        </div>
+
+        {/* All sequence notes — scrollable list, active one highlighted */}
+        {sequences.some((s) => s.note) && (
+          <div className="flex-1 overflow-y-auto mb-2 space-y-1 min-h-0">
+            {sequences.map((seq, i) => {
+              if (!seq.note) return null;
+              const isActive = seq === activeSeq;
+              const colour = MARK_COLOURS[i % MARK_COLOURS.length];
+              const seqDurationMs = seq.endMs - seq.startMs;
+              const remaining = isActive ? seq.endMs - positionMs : null;
+              return (
+                <div
+                  key={seq.id ?? i}
+                  className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 transition-colors ${
+                    isActive ? 'bg-zinc-800' : 'opacity-50'
+                  }`}
+                  style={isActive ? { borderLeft: `3px solid ${colour}` } : { borderLeft: '3px solid transparent' }}
+                >
+                  <p className={`text-base leading-snug flex-1 ${isActive ? 'text-white font-medium' : 'text-zinc-400'}`}>
+                    {seq.note}
+                  </p>
+                  <div className="text-right shrink-0 tabular-nums">
+                    {isActive && remaining !== null ? (
+                      <>
+                        <p className="text-white text-2xl font-semibold">{fmtMs(Math.max(0, remaining))}</p>
+                        <p className="text-zinc-500 text-xs">of {fmtMs(seqDurationMs)}</p>
+                      </>
+                    ) : (
+                      <p className="text-zinc-500 text-base">{fmtMs(seqDurationMs)}</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Standalone countdown when between cues or no notes */}
+        {!activeSeq && hasStarted && (
+          <div className="flex justify-end mb-2">
+            <div className="text-right">
+              <p className="text-zinc-100 text-4xl tabular-nums">{fmtMs(Math.max(0, countdownMs))}</p>
+              <p className="text-zinc-500 text-sm">{countdownLabel}</p>
+            </div>
           </div>
         )}
 
         {/* Device picker — shown when no device selected or none found */}
         {!selectedDeviceId && (
-          <div className="space-y-2">
+          <div className="space-y-2 mb-2">
             {loadingDevices ? (
               <p className="text-zinc-500 text-sm text-center animate-pulse">Looking for Spotify devices…</p>
             ) : devices.length === 0 ? (
@@ -503,68 +562,40 @@ export default function ConnectPlayer({
 
         {/* Error banner */}
         {error && selectedDeviceId && (
-          <p className="text-red-400 text-sm text-center">{error}</p>
+          <p className="text-red-400 text-sm text-center mb-2">{error}</p>
         )}
 
-        {/* Player controls — shown once a device is selected */}
-        {selectedDeviceId && (
-          <div className="flex-col gap-3">
+        {/* Controls — pushed to bottom */}
+        <div className="mt-auto">
+          {selectedDeviceId && (
+            <>
+              <div className="flex items-center justify-center gap-10">
+                <ConnCtrlBtn label="Previous" disabled={isAtStart} onClick={handlePrev}>
+                  <PrevIcon />
+                </ConnCtrlBtn>
 
-            <div className="flex justify-between gap-2">
-              {/* Queue position */}
-              <span className="text-zinc-700 text-sm tabular-nums shrink-0">
-                {currentIndex + 1} / {songs.length}
-              </span>
+                <button
+                  onClick={handlePlayPause}
+                  className="w-15 h-15 rounded-full bg-white flex items-center justify-center active:scale-95 transition-transform shrink-0 ml-1"
+                  aria-label={isPlaying ? 'Pause' : 'Play playlist'}
+                >
+                  {isPlaying ? <PauseIcon /> : <PlayIcon />}
+                </button>
 
-              <p className="text-zinc-500 text-sm truncate">
-                  {hasStarted && (
-                    <span className="ml-2 tabular-nums text-xl text-zinc-100">
-                      {fmtMs(positionMs)} / {fmtMs(effectiveDur)}
-                    </span>
-                  )}
-              </p>
-            </div>
+                <ConnCtrlBtn label="Next" disabled={isAtEnd} onClick={handleNext}>
+                  <NextIcon />
+                </ConnCtrlBtn>
+              </div>
 
-            {/* Current song info */}
-            <div className="flex-1 min-w-0">
-              {/* <p className="text-white text-xl font-medium truncate leading-snug">{currentSong.title}</p> */}
-              {/* <p className="text-zinc-500 text-sm truncate"> */}
-                {/* {currentSong.artist} */}
-                {/* {hasStarted && (
-                  <span className="ml-2 tabular-nums text-xl text-zinc-600">
-                    {fmtMs(positionMs)} / {fmtMs(effectiveDur)}
-                  </span>
-                )} */}
-              {/* </p> */}
-            </div>
-
-            {/* Controls */}
-            <div className="flex items-center justify-center justify-items-center gap-10 shrink-0">
-              <ConnCtrlBtn label="Previous" disabled={isAtStart} onClick={handlePrev}>
-                <PrevIcon />
-              </ConnCtrlBtn>
-
-              <button
-                onClick={handlePlayPause}
-                className="w-15 h-15 rounded-full bg-white flex items-center justify-center active:scale-95 transition-transform shrink-0 ml-1"
-                aria-label={isPlaying ? 'Pause' : 'Play playlist'}
-              >
-                {isPlaying ? <PauseIcon /> : <PlayIcon />}
-              </button>
-
-              <ConnCtrlBtn label="Next" disabled={isAtEnd} onClick={handleNext}>
-                <NextIcon />
-              </ConnCtrlBtn>
-            </div>
-            {/* Device indicator — tap to change */}
               <button
                 onClick={() => setSelectedDeviceId(null)}
-                className="text-zinc-700 text-sm hover:text-zinc-400 transition-colors truncate max-w-full text-left"
+                className="mt-1 text-zinc-700 text-sm hover:text-zinc-400 transition-colors truncate max-w-full text-left block mx-auto"
               >
                 ▸ {selectedDeviceName}
               </button>
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
