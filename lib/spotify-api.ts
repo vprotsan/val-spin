@@ -21,6 +21,7 @@ export interface SpotifyTrack {
   name: string;
   uri: string;
   duration_ms: number;
+  preview_url: string | null;
   artists: { name: string }[];
   album: { name: string; images: { url: string; width: number }[] };
 }

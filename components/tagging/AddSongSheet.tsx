@@ -42,8 +42,7 @@ export default function AddSongSheet({ defaultCue, taggedUris }: Props) {
   const router = useRouter();
 
   const handleTagged = useCallback(() => {
-    setOpen(false);
-    router.push('/tagging');
+    router.refresh();
   }, [router]);
 
   return (
@@ -67,6 +66,25 @@ type Tab = 'library' | 'playlists' | 'search';
 
 function Sheet({ defaultCue, taggedUris, onClose, onTagged }: Props & { onClose: () => void; onTagged: () => void }) {
   const [tab, setTab] = useState<Tab>('library');
+  const [playingUri, setPlayingUri] = useState<string | null>(null);
+
+  const handlePreview = useCallback(async (uri: string) => {
+    const { accessToken } = await fetch('/api/auth/token').then((r) => r.json());
+    if (playingUri === uri) {
+      await fetch('https://api.spotify.com/v1/me/player/pause', {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      setPlayingUri(null);
+      return;
+    }
+    await fetch('https://api.spotify.com/v1/me/player/play', {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uris: [uri] }),
+    });
+    setPlayingUri(uri);
+  }, [playingUri]);
 
   // ── Library state ──────────────────────────────────────────────────────────
   const [libraryTracks, setLibraryTracks] = useState<SpotifyTrack[] | null>(null);
@@ -90,6 +108,7 @@ function Sheet({ defaultCue, taggedUris, onClose, onTagged }: Props & { onClose:
     if (!q) return;
     setSubmittedQuery(q);
   }, [searchQuery]);
+
 
   // ── Load library on mount ──────────────────────────────────────────────────
   useEffect(() => {
@@ -287,6 +306,8 @@ function Sheet({ defaultCue, taggedUris, onClose, onTagged }: Props & { onClose:
                     defaultCue={defaultCue}
                     currentTag={taggedUris[track.uri]}
                     onTagged={onTagged}
+                    playingUri={playingUri}
+                    onPreview={handlePreview}
                   />
                 ))}
               </ul>
@@ -325,6 +346,8 @@ function Sheet({ defaultCue, taggedUris, onClose, onTagged }: Props & { onClose:
                     defaultCue={defaultCue}
                     currentTag={taggedUris[track.uri]}
                     onTagged={onTagged}
+                    playingUri={playingUri}
+                    onPreview={handlePreview}
                   />
                 ))}
               </ul>
@@ -361,11 +384,15 @@ function TrackRow({
   defaultCue,
   currentTag,
   onTagged,
+  playingUri,
+  onPreview,
 }: {
   track: SpotifyTrack;
   defaultCue: Cue;
   currentTag: Cue | undefined;
   onTagged: () => void;
+  playingUri: string | null;
+  onPreview: (uri: string) => void;
 }) {
   const [isPending, startTransition] = useTransition();
   const [expanded, setExpanded] = useState(false);
@@ -375,6 +402,7 @@ function TrackRow({
     track.album.images.find((img) => img.width && img.width <= 64)?.url ??
     track.album.images.at(-1)?.url;
   const artistNames = track.artists.map((a) => a.name).join(', ');
+  const isPlaying = playingUri === track.uri;
 
   function handleTag(cue: Cue) {
     startTransition(async () => {
@@ -396,13 +424,17 @@ function TrackRow({
   return (
     <li className={`transition-opacity ${isPending ? 'opacity-40 pointer-events-none' : ''}`}>
       <div className="flex items-center gap-3 py-3 border-b border-zinc-800/50">
-        {thumb ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={thumb} alt="" className="w-11 h-11 rounded object-cover shrink-0 bg-zinc-800" />
-        ) : (
-          <div className="w-11 h-11 rounded bg-zinc-800 shrink-0" />
-        )}
+        {/* Album art */}
+        <div className="shrink-0 w-11 h-11">
+          {thumb ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={thumb} alt="" className="w-11 h-11 rounded object-cover bg-zinc-800" />
+          ) : (
+            <div className="w-11 h-11 rounded bg-zinc-800" />
+          )}
+        </div>
 
+        {/* Song info */}
         <div className="flex-1 min-w-0">
           <p className="text-white text-base font-medium truncate">{track.name}</p>
           <p className="text-zinc-400 text-sm truncate">
@@ -411,6 +443,28 @@ function TrackRow({
           </p>
         </div>
 
+        {/* Play / pause on active Spotify device */}
+        <button
+          onClick={() => onPreview(track.uri)}
+          aria-label={isPlaying ? 'Pause' : 'Play'}
+          className={`shrink-0 w-9 h-9 flex items-center justify-center rounded-full border transition-colors ${
+            isPlaying
+              ? 'bg-white border-white text-black'
+              : 'border-zinc-600 text-zinc-400 hover:border-zinc-400 hover:text-white'
+          }`}
+        >
+          {isPlaying ? (
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" className="w-4 h-4 ml-0.5" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          )}
+        </button>
+
+        {/* Tag button */}
         <button
           onClick={() => setExpanded((v) => !v)}
           className={`shrink-0 rounded-full border px-2.5 py-0.5 text-sm font-medium transition-colors ${

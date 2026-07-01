@@ -262,6 +262,9 @@ export function SegmentCard({
               <p className="text-zinc-400 text-sm truncate">
                 {song.artist}
                 <span className="${isSongActive ? 'text-zinc-200' : 'text-zinc-600'} ml-2 tabular-nums">{fmtMs(song.durationMs)}</span>
+                {song.sequences.length > 0 && (
+                  <span className="ml-2 text-zinc-600">{song.sequences.length} {song.sequences.length === 1 ? 'cue' : 'cues'}</span>
+                )}
               </p>
             </div>
 
