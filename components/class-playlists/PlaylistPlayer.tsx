@@ -441,6 +441,10 @@ export default function PlaylistPlayer({
   const sequences    = currentSong.sequences;
   const positionMs   = playback?.positionMs ?? 0;
   const durationMs   = playback?.durationMs || currentSong.durationMs;
+
+  const remainingInPlaylistMs =
+    (durationMs - positionMs) +
+    songs.slice(currentIndex + 1).reduce((sum, s) => sum + s.durationMs, 0);
   const isPaused     = !hasStartedRef.current || (playback?.paused ?? true);
   const isAtStart    = currentIndex === 0 && positionMs <= 3000 && !hasStartedRef.current;
   const isAtEnd      = currentIndex >= songs.length - 1;
@@ -500,7 +504,7 @@ export default function PlaylistPlayer({
                   </span>
                 )}
                 <span className="ml-2 text-zinc-700 text-xl tabular-nums">
-                  {currentIndex + 1} / {songs.length}
+                  -{fmtMs(Math.max(0, remainingInPlaylistMs))}
                 </span>
               </p>
             </div>

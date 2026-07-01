@@ -43,7 +43,7 @@ export default function AddSongSheet({ defaultCue, taggedUris }: Props) {
 
   const handleTagged = useCallback(() => {
     setOpen(false);
-    router.refresh();
+    router.push('/tagging');
   }, [router]);
 
   return (

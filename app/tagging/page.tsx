@@ -6,7 +6,7 @@ import { ensureHydrated } from '@/lib/db/hydrate';
 import { CUE_TYPES } from '@/types';
 import type { Cue } from '@/types';
 import CueGrid from '@/components/tagging/CueGrid';
-import TaggedSongRow from '@/components/tagging/TaggedSongRow';
+import TaggedSongList from '@/components/tagging/TaggedSongList';
 import AddSongSheet from '@/components/tagging/AddSongSheet';
 
 export default async function TaggingPage({
@@ -78,28 +78,8 @@ export default async function TaggingPage({
           taggedUris={taggedUris}
         />
 
-        {/* Song list */}
-        <section>
-          <h2 className="text-zinc-500 text-sm font-semibold uppercase tracking-widest mb-1">
-            {sectionLabel}
-          </h2>
-
-          {displayedSongs.length === 0 ? (
-            <p className="text-zinc-600 text-base py-8 text-center">
-              {selectedCue
-                ? `No songs tagged as ${selectedCue} yet.`
-                : 'No songs tagged yet.'}
-              <br />
-              <span className="text-zinc-700">Tap &ldquo;Add Song&rdquo; to get started.</span>
-            </p>
-          ) : (
-            <ul>
-              {displayedSongs.map((song) => (
-                <TaggedSongRow key={song.id} song={song} />
-              ))}
-            </ul>
-          )}
-        </section>
+        {/* Song list with inline search */}
+        <TaggedSongList songs={displayedSongs} sectionLabel={sectionLabel} />
       </div>
     </main>
   );
