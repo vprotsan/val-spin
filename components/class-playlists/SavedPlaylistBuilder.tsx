@@ -11,7 +11,7 @@ import {
 } from '@/app/actions/savedPlaylists';
 import { CUE_TYPES } from '@/types';
 import type { Cue, Segment, Song } from '@/types';
-import { SegmentCard, CUE_BTN, fmtMs, segDuration } from '@/components/playlist/shared';
+import { SegmentCard, CUE_BTN, CUE_TAG, fmtMs, segDuration } from '@/components/playlist/shared';
 import { useState } from 'react';
 
 /**
@@ -30,6 +30,7 @@ export default function SavedPlaylistBuilder({
   songsByCue,
   isEditing,
   activeFlatIndex = -1,
+  viewMode = 'songs',
 }: {
   playlistId: string;
   segments: Segment[];
@@ -37,6 +38,7 @@ export default function SavedPlaylistBuilder({
   songsByCue: Record<Cue, Song[]>;
   isEditing: boolean;
   activeFlatIndex?: number;
+  viewMode?: 'songs' | 'cues';
 }) {
   const [addingCuePicker, setAddingCuePicker] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -89,14 +91,42 @@ export default function SavedPlaylistBuilder({
     [playlistId, sync],
   );
 
+  const flatCues = segments.flatMap((seg) =>
+    seg.songs.map((song) => ({ song, cue: seg.cue }))
+  );
+
   return (
     <div className={`space-y-1 transition-opacity ${isPending ? 'opacity-60 pointer-events-none' : ''}`}>
       <p className="text-zinc-500 text-sm">
         {isPending && <span className="ml-2 text-zinc-600">saving…</span>}
       </p>
 
+      {/* Cues view */}
+      {viewMode === 'cues' && (
+        <div className="rounded-2xl border border-zinc-800 overflow-hidden">
+          {flatCues.length === 0 && (
+            <p className="text-zinc-600 text-sm px-4 py-3 text-center">No songs in playlist yet.</p>
+          )}
+          {flatCues.map(({ song, cue }, idx) => (
+            <div
+              key={`${song.id}-${idx}`}
+              className="flex items-center gap-3 px-4 py-3 border-b border-zinc-800/60 last:border-0"
+            >
+              <span className="text-zinc-600 text-sm tabular-nums w-5 shrink-0 text-right">{idx + 1}</span>
+              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${CUE_TAG[cue]}`}>
+                {cue}
+              </span>
+              <span className="text-white text-base truncate">{song.title}</span>
+              <span className="text-zinc-600 text-sm tabular-nums shrink-0 ml-auto">
+                {fmtMs(song.durationMs)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Segment list */}
-      {segments.reduce<{ els: React.ReactNode[]; offset: number }>(
+      {viewMode === 'songs' && segments.reduce<{ els: React.ReactNode[]; offset: number }>(
         ({ els, offset }, seg, segIdx) => {
           els.push(
             <SegmentCard
@@ -120,7 +150,7 @@ export default function SavedPlaylistBuilder({
         { els: [] as ReactNode[], offset: 0 },
       ).els}
 
-      {segments.length === 0 && (
+      {viewMode === 'songs' && segments.length === 0 && (
         <p className="text-zinc-600 text-base text-center py-8">
           {isEditing
             ? 'No segments yet. Add one below to start building your class.'
@@ -128,8 +158,8 @@ export default function SavedPlaylistBuilder({
         </p>
       )}
 
-      {/* Add segment — edit mode only */}
-      {isEditing && (
+      {/* Add segment — edit mode + songs view only */}
+      {viewMode === 'songs' && isEditing && (
         addingCuePicker ? (
           <div className="rounded-2xl border border-zinc-700 bg-zinc-900 p-4 space-y-3">
             <p className="text-zinc-400 text-base font-medium">Choose a cue for this segment:</p>

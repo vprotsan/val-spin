@@ -26,7 +26,7 @@ const CUE_CARD_BORDER: Record<Cue, string> = {
   Flat:    'border-sky-300/40',
 };
 
-const CUE_TAG: Record<Cue, string> = {
+export const CUE_TAG: Record<Cue, string> = {
   Jumps:   'bg-amber-500/20 text-amber-300',
   Climbs:  'bg-emerald-500/20 text-emerald-300',
   Sprints: 'bg-red-500/20 text-red-300',

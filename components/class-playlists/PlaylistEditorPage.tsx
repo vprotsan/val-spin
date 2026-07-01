@@ -37,6 +37,7 @@ export default function PlaylistEditorPage({
   const [name, setName]                 = useState(initialName);
   const [segments, setSegments]         = useState<Segment[]>(initialSegments);
   const [activeSongIndex, setActiveSongIndex] = useState(0);
+  const [viewMode, setViewMode]         = useState<'songs' | 'cues'>('songs');
   const nameInputRef                    = useRef<HTMLInputElement>(null);
 
   // Player queue is fixed at page-load time (adding/removing songs requires
@@ -148,6 +149,28 @@ export default function PlaylistEditorPage({
 
           {/* <ThemeToggle /> */}
 
+          {/* Songs / Cues toggle */}
+          {!isEditing && segments.length > 0 && (
+            <div className="flex items-center gap-0.5 bg-zinc-900 border border-zinc-700 rounded-full p-0.5 shrink-0">
+              <button
+                onClick={() => setViewMode('songs')}
+                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  viewMode === 'songs' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Songs
+              </button>
+              <button
+                onClick={() => setViewMode('cues')}
+                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  viewMode === 'cues' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Cues
+              </button>
+            </div>
+          )}
+
           {/* Edit / Done toggle */}
           {isEditing ? (
             <button
@@ -178,6 +201,7 @@ export default function PlaylistEditorPage({
           songsByCue={songsByCue}
           isEditing={isEditing}
           activeFlatIndex={activeSongIndex}
+          viewMode={viewMode}
         />
       </div>
 
