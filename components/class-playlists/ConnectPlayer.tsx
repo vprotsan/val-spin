@@ -420,7 +420,7 @@ export default function ConnectPlayer({
     : nextSeq
       ? nextSeq.startMs - positionMs
       : effectiveDur - positionMs;
-  const countdownLabel = activeSeq ? 'cue ends' : nextSeq ? 'next cue' : 'song ends';
+  //const countdownLabel = activeSeq ? 'cue ends' : nextSeq ? 'next cue' : 'song ends';
 
   const gradient = useMemo(
     () => buildGradient(sequences, effectiveDur),
@@ -515,7 +515,7 @@ export default function ConnectPlayer({
           <div className="flex justify-end mb-2">
             <div className="text-right">
               <p className="text-zinc-100 text-4xl tabular-nums">{fmtMs(Math.max(0, countdownMs))}</p>
-              <p className="text-zinc-500 text-sm">{countdownLabel}</p>
+              {/* <p className="text-zinc-500 text-sm">{countdownLabel}</p> */}
             </div>
           </div>
         )}

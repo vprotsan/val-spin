@@ -580,7 +580,7 @@ export default function PlaylistPlayer({
 
           {/* Prev / Play-Pause / Next — 3 equal columns, pushed to bottom */}
           {status === 'ready' && (
-            <div className="mt-auto grid grid-cols-3 items-center">
+            <div className="grid grid-cols-3 items-center">
               <div className="flex justify-center">
                 <CtrlBtn label="Previous" disabled={isAtStart} onClick={handlePrev}>
                   <PrevIcon />
