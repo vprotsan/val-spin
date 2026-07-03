@@ -512,7 +512,7 @@ export default function ConnectPlayer({
 
         {/* Standalone countdown when between cues or no notes */}
         {!activeSeq && hasStarted && (
-          <div className="flex justify-end mb-2">
+          <div className="flex justify-end items-center mb-2">
             <div className="text-right">
               <p className="text-zinc-100 text-4xl tabular-nums">{fmtMs(Math.max(0, countdownMs))}</p>
               {/* <p className="text-zinc-500 text-sm">{countdownLabel}</p> */}

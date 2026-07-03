@@ -92,7 +92,7 @@ export default function PlaylistListClient({
               </div>
 
               {/* Meta */}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 items-center">
                 <p className="text-white font-medium text-base truncate">{pl.name}</p>
                 <p className="text-zinc-500 text-sm mt-0.5">
                   {songs > 0

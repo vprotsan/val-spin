@@ -111,7 +111,7 @@ export default function PlaylistEditorPage({
           )}
 
           {/* Name + subtitle — fills available width */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 items-center">
             {isEditing ? (
               <input
                 ref={nameInputRef}
@@ -124,7 +124,7 @@ export default function PlaylistEditorPage({
                 aria-label="Playlist name"
               />
             ) : (
-              <div className="flex">
+              <div className="flex items-center justify-between">
               <h1 className="text-2xl font-bold text-white truncate">{name}</h1>
                <p className="text-zinc-500 text-sm">
                 {totalMs > 0 && <> &middot; {fmtMs(totalMs)} total</>}

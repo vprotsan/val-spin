@@ -497,16 +497,20 @@ export default function PlaylistPlayer({
           {/* Song info */}
           {status === 'ready' && (
             <div className="mb-2">
-              <p className="flex justify-between">
+              <div className="flex justify-between content-center">
                 {playback && (
-                  <span className="ml-2 tabular-nums text-xl text-zinc-600">
+                  <span className="ml-2 tabular-nums text-4xl text-zinc-100">
                     {fmtMs(positionMs)} / {fmtMs(durationMs)}
                   </span>
                 )}
-                <span className="ml-2 text-zinc-700 text-xl tabular-nums">
+                <span className="ml-2 text-zinc-100 text-4xl tabular-nums">
                   -{fmtMs(Math.max(0, remainingInPlaylistMs))}
                 </span>
-              </p>
+                <div className="text-right">
+                  <p className="text-zinc-100 text-4xl tabular-nums">{fmtMs(countdownMs)}</p>
+                  <p className="text-zinc-500 text-sm">{countdownLabel}</p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -549,10 +553,10 @@ export default function PlaylistPlayer({
           {/* Standalone countdown when between cues or no notes on song */}
           {status === 'ready' && !activeSeq && playback && (
             <div className="flex justify-end mb-2">
-              <div className="text-right">
+              {/* <div className="text-right">
                 <p className="text-zinc-100 text-4xl tabular-nums">{fmtMs(countdownMs)}</p>
                 <p className="text-zinc-500 text-sm">{countdownLabel}</p>
-              </div>
+              </div> */}
             </div>
           )}
 
