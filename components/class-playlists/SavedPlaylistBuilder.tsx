@@ -92,7 +92,11 @@ export default function SavedPlaylistBuilder({
   );
 
   const flatCues = segments.flatMap((seg) =>
-    seg.songs.map((song) => ({ song, cue: seg.cue }))
+    seg.songs.flatMap((song) => {
+      const notes = song.sequences.filter((s) => s.note).map((s) => s.note!);
+      if (notes.length > 0) return notes.map((note) => ({ label: note, cue: seg.cue, song }));
+      return [{ label: song.title, cue: seg.cue, song }];
+    })
   );
 
   return (
@@ -107,16 +111,14 @@ export default function SavedPlaylistBuilder({
           {flatCues.length === 0 && (
             <p className="text-zinc-600 text-sm px-4 py-3 text-center">No songs in playlist yet.</p>
           )}
-          {flatCues.map(({ song, cue }, idx) => (
+          {flatCues.map(({ label, cue, song }, idx) => (
             <div
               key={`${song.id}-${idx}`}
               className="flex items-center gap-3 px-4 py-3 border-b border-zinc-800/60 last:border-0"
             >
               <span className="text-zinc-600 text-sm tabular-nums w-5 shrink-0 text-right">{idx + 1}</span>
-              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${CUE_TAG[cue]}`}>
-                {cue}
-              </span>
-              <span className="text-white text-base truncate">{song.title}</span>
+              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${CUE_TAG[cue]}`}>{cue}</span>
+              <span className="text-white text-base truncate">{label}</span>
               <span className="text-zinc-600 text-sm tabular-nums shrink-0 ml-auto">
                 {fmtMs(song.durationMs)}
               </span>
