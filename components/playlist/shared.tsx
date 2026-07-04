@@ -222,7 +222,7 @@ export function SegmentCard({
             {isEditing && (
               <button
                 onClick={() => onRemoveSegment(segment.id)}
-                className="shrink-0 opacity-40 hover:opacity-80 text-2xl leading-none transition-opacity"
+                className="text-zinc-600 shrink-0 text-2xl leading-none transition-opacity"
                 aria-label="Remove segment"
               >
                 ×
