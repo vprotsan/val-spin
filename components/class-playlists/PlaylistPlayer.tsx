@@ -482,7 +482,7 @@ export default function PlaylistPlayer({
       />
 
       {/* ── Sticky player bar ─────────────────────────────────────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-zinc-950/95 backdrop-blur-sm border-t border-zinc-800 min-h-[33vh] flex flex-col">
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-zinc-950/95 backdrop-blur-sm border-t border-zinc-800 flex flex-col">
 
         {/* Segmented track line — full bleed, click to seek */}
         <SegmentedTrackBar
