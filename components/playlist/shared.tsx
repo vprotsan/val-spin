@@ -93,6 +93,31 @@ function openSpan(startMs: number, endMs: number): CueSpan {
   return { id: `open-${startMs}-${endMs}`, startMs, endMs, note: OPEN_CUE_LABEL, isOpen: true };
 }
 
+// ── Note options ──────────────────────────────────────────────────────────────
+// Single source of truth for the custom-cue note dropdown. Add/rename/recolor
+// an option here — every consumer (the tagging dropdown, the player progress
+// bar) picks it up automatically. The value ↔ color pairing is permanent: a
+// note's color always comes from its value, never from position/order.
+
+export interface NoteOption {
+  value: string;
+  color: string; // hex — used directly in inline styles and gradient stops
+}
+
+export const NOTE_OPTIONS: NoteOption[] = [
+  { value: 'speed up', color: '#f43f5e' }, // rose
+  { value: 'jump',      color: '#f59e0b' }, // amber
+  { value: 'run',       color: '#10b981' }, // emerald
+];
+
+// Fallback for sequences with no note, or a note outside the fixed list
+// (e.g. legacy freeform text) — matches the progress bar's neutral gap color.
+export const DEFAULT_NOTE_COLOR = '#3f3f46'; // zinc-700
+
+export function noteColor(note?: string): string {
+  return NOTE_OPTIONS.find((o) => o.value === note)?.color ?? DEFAULT_NOTE_COLOR;
+}
+
 // ── MoveBtn ───────────────────────────────────────────────────────────────────
 
 export function MoveBtn({

@@ -9,6 +9,7 @@ import {
   deleteSequenceAction,
 } from '@/app/actions/sequences';
 import type { Song, Sequence } from '@/types';
+import { NOTE_OPTIONS } from '@/components/playlist/shared';
 
 // ── Spotify helpers ────────────────────────────────────────────────────────────
 
@@ -660,13 +661,18 @@ export default function SequenceEditor({ song }: { song: Song }) {
                 <span className="text-amber-300 text-base font-medium shrink-0">
                   Start: {fmtMs(pendingStartMs)}
                 </span>
-                <input
-                  type="text"
+                <select
                   value={pendingNote}
                   onChange={(e) => setPendingNote(e.target.value)}
-                  placeholder="Optional note…"
-                  className="flex-1 bg-transparent text-white text-base placeholder-zinc-600 outline-none"
-                />
+                  className="flex-1 bg-transparent text-white text-base outline-none"
+                >
+                  <option value="" className="bg-zinc-900 text-zinc-400">No note</option>
+                  {NOTE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value} className="bg-zinc-900 text-white">
+                      {opt.value}
+                    </option>
+                  ))}
+                </select>
               </div>
               <button
                 onClick={handleMarkEnd}
@@ -803,12 +809,18 @@ function EditRow({
           </div>
         </label>
       </div>
-      <input
+      <select
         value={noteVal}
         onChange={(e) => setNoteVal(e.target.value)}
-        placeholder="Note (optional)"
-        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-base outline-none focus:border-zinc-500 placeholder-zinc-600"
-      />
+        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-base outline-none focus:border-zinc-500"
+      >
+        <option value="" className="bg-zinc-900 text-zinc-400">No note</option>
+        {NOTE_OPTIONS.map((opt) => (
+          <option key={opt.value} value={opt.value} className="bg-zinc-900 text-white">
+            {opt.value}
+          </option>
+        ))}
+      </select>
       <div className="flex gap-2">
         <button
           onClick={handleSave}

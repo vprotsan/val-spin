@@ -14,6 +14,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type { Sequence, Song } from '@/types';
+import { noteColor, DEFAULT_NOTE_COLOR } from '@/components/playlist/shared';
 
 // ── Spotify REST helpers ──────────────────────────────────────────────────────
 
@@ -123,11 +124,10 @@ async function apiTransfer(deviceId: string, token: string): Promise<void> {
 }
 
 // ── Track-line helpers (self-contained so ConnectPlayer has no SDK dep) ───────
+// Each mark's colour comes from its note value (see NOTE_OPTIONS in shared.tsx)
+// — a permanent, value-based mapping rather than a cycling palette.
 
-const MARK_COLOURS = [
-  '#f59e0b', '#0ea5e9', '#f43f5e', '#8b5cf6', '#f97316', '#10b981',
-] as const;
-const GAP_COLOUR = '#3f3f46';
+const GAP_COLOUR = DEFAULT_NOTE_COLOR;
 
 function buildGradient(sequences: Sequence[], durationMs: number): string {
   if (!sequences.length || durationMs === 0) return GAP_COLOUR;
@@ -135,7 +135,7 @@ function buildGradient(sequences: Sequence[], durationMs: number): string {
   let prev = 0;
   for (let i = 0; i < sequences.length; i++) {
     const seq = sequences[i];
-    const colour = MARK_COLOURS[i % MARK_COLOURS.length];
+    const colour = noteColor(seq.note);
     const s = (seq.startMs / durationMs) * 100;
     const e = (seq.endMs   / durationMs) * 100;
     if (s > prev + 0.01) stops.push(`${GAP_COLOUR} ${prev.toFixed(2)}%`, `${GAP_COLOUR} ${s.toFixed(2)}%`);
@@ -417,7 +417,7 @@ export default function ConnectPlayer({
 
   const activeSeqIndex = sequences.findIndex((s) => positionMs >= s.startMs && positionMs < s.endMs);
   const activeSeq      = activeSeqIndex >= 0 ? sequences[activeSeqIndex] : null;
-  const activeColour   = activeSeqIndex >= 0 ? MARK_COLOURS[activeSeqIndex % MARK_COLOURS.length] : null;
+  const activeColour   = activeSeq ? noteColor(activeSeq.note) : null;
 
   const nextSeq      = sequences.find((s) => s.startMs > positionMs);
   const countdownMs  = activeSeq

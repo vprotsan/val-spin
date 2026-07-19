@@ -12,6 +12,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Script from 'next/script';
 import type { Sequence, Song } from '@/types';
+import { noteColor, DEFAULT_NOTE_COLOR } from '@/components/playlist/shared';
 import ConnectPlayer from './ConnectPlayer';
 
 // ── Spotify Web API helpers ───────────────────────────────────────────────────
@@ -64,18 +65,11 @@ async function playUri(uri: string, deviceId: string, token: string): Promise<vo
 }
 
 // ── Segment colours & gradient ────────────────────────────────────────────────
+// Each mark's colour comes from its note value (see NOTE_OPTIONS in shared.tsx)
+// — a permanent, value-based mapping rather than a cycling palette. Un-noted
+// sequences fall back to the same neutral colour as the gaps.
 
-/** Cycling palette for mark segments — visually distinct on dark backgrounds. */
-const MARK_COLOURS = [
-  '#f59e0b', // amber
-  '#0ea5e9', // sky
-  '#f43f5e', // rose
-  '#8b5cf6', // violet
-  '#f97316', // orange
-  '#10b981', // emerald
-] as const;
-
-const GAP_COLOUR = '#3f3f46'; // zinc-700 — used for un-marked portions
+const GAP_COLOUR = DEFAULT_NOTE_COLOR;
 
 /**
  * Build a CSS linear-gradient that colours each sequence range and leaves
@@ -89,7 +83,7 @@ function buildSegmentGradient(sequences: Sequence[], durationMs: number): string
 
   for (let i = 0; i < sequences.length; i++) {
     const seq = sequences[i];
-    const colour = MARK_COLOURS[i % MARK_COLOURS.length];
+    const colour = noteColor(seq.note);
     const startPct = (seq.startMs / durationMs) * 100;
     const endPct   = (seq.endMs   / durationMs) * 100;
 
@@ -459,9 +453,7 @@ export default function PlaylistPlayer({
     (seq) => positionMs >= seq.startMs && positionMs < seq.endMs,
   );
   const activeSeq      = activeSeqIndex >= 0 ? sequences[activeSeqIndex] : null;
-  const activeColour   = activeSeqIndex >= 0
-    ? MARK_COLOURS[activeSeqIndex % MARK_COLOURS.length]
-    : null;
+  const activeColour   = activeSeq ? noteColor(activeSeq.note) : null;
 
   // Countdown logic:
   // - inside a cue → time until this cue ends
