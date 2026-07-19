@@ -475,7 +475,7 @@ export default function ConnectPlayer({
         </div>
 
         {/* All sequence notes — scrollable list, active one highlighted */}
-        {sequences.some((s) => s.note) && (
+        {/* {sequences.some((s) => s.note) && (
           <div className="flex-1 overflow-y-auto mb-2 space-y-1 min-h-0">
             {sequences.map((seq, i) => {
               if (!seq.note) return null;
@@ -508,7 +508,7 @@ export default function ConnectPlayer({
               );
             })}
           </div>
-        )}
+        )} */}
 
         {/* Standalone countdown when between cues or no notes */}
         {!activeSeq && hasStarted && (
