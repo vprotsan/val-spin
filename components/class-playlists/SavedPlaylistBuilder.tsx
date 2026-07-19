@@ -11,7 +11,7 @@ import {
 } from '@/app/actions/savedPlaylists';
 import { CUE_TYPES } from '@/types';
 import type { Cue, Segment, Song } from '@/types';
-import { SegmentCard, CUE_BTN, CUE_TAG, fmtMs, segDuration } from '@/components/playlist/shared';
+import { SegmentCard, CUE_BTN, CUE_TAG, OPEN_TAG, fmtMs, segDuration, fillCueGaps } from '@/components/playlist/shared';
 import { useState } from 'react';
 
 /**
@@ -95,32 +95,23 @@ export default function SavedPlaylistBuilder({
 
   // flatIdx matches the flat song ordering used by PlaylistPlayer's queue
   // (segments.flatMap(seg => seg.songs)) so activeFlatIndex lines up here too.
+  // Gaps between custom cues are filled with a synthetic "Open" span so every
+  // moment of every song shows up as a row.
   let songFlatIdx = -1;
   const flatCues = segments.flatMap((seg) =>
     seg.songs.flatMap((song) => {
       songFlatIdx++;
       const flatIdx = songFlatIdx;
-      const notedSeqs = song.sequences.filter((s) => s.note);
-      if (notedSeqs.length > 0) {
-        return notedSeqs.map((seq) => ({
-          label: seq.note!,
-          cue: seg.cue,
-          song,
-          flatIdx,
-          durationMs: seq.endMs - seq.startMs,
-          startMs: seq.startMs as number | null,
-          endMs: seq.endMs as number | null,
-        }));
-      }
-      return [{
-        label: song.title,
+      return fillCueGaps(song.sequences, song.durationMs).map((span) => ({
+        label: span.note,
         cue: seg.cue,
         song,
         flatIdx,
-        durationMs: song.durationMs,
-        startMs: null as number | null,
-        endMs: null as number | null,
-      }];
+        durationMs: span.endMs - span.startMs,
+        startMs: span.startMs,
+        endMs: span.endMs,
+        isOpen: span.isOpen,
+      }));
     })
   );
 
@@ -136,12 +127,11 @@ export default function SavedPlaylistBuilder({
           {flatCues.length === 0 && (
             <p className="text-zinc-600 text-sm px-4 py-3 text-center">No songs in playlist yet.</p>
           )}
-          {flatCues.map(({ label, cue, song, flatIdx, durationMs, startMs, endMs }, idx) => {
+          {flatCues.map(({ label, cue, song, flatIdx, durationMs, startMs, endMs, isOpen }, idx) => {
             const isActive =
               flatIdx === activeFlatIndex &&
-              (startMs === null || endMs === null
-                ? true
-                : activePositionMs >= startMs && activePositionMs < endMs);
+              activePositionMs >= startMs &&
+              activePositionMs < endMs;
             return (
               <CueRow
                 key={`${song.id}-${idx}`}
@@ -150,6 +140,7 @@ export default function SavedPlaylistBuilder({
                 cue={cue}
                 durationMs={durationMs}
                 isActive={isActive}
+                isOpen={isOpen}
               />
             );
           })}
@@ -236,12 +227,14 @@ function CueRow({
   cue,
   durationMs,
   isActive,
+  isOpen,
 }: {
   idx: number;
   label: string;
   cue: Cue;
   durationMs: number;
   isActive: boolean;
+  isOpen: boolean;
 }) {
   const rowRef = useRef<HTMLDivElement | null>(null);
 
@@ -259,7 +252,11 @@ function CueRow({
     >
       <span className="text-zinc-600 text-sm tabular-nums w-5 shrink-0 text-right">{idx + 1}</span>
       <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${CUE_TAG[cue]}`}>{cue}</span>
-      <span className={`text-base truncate ${isActive ? 'text-white font-semibold' : 'text-white'}`}>{label}</span>
+      {isOpen ? (
+        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${OPEN_TAG}`}>{label}</span>
+      ) : (
+        <span className={`text-base truncate ${isActive ? 'text-white font-semibold' : 'text-white'}`}>{label}</span>
+      )}
       <span className={`text-sm tabular-nums shrink-0 ml-auto ${isActive ? 'text-zinc-100' : 'text-zinc-600'}`}>
         {fmtMs(durationMs)}
       </span>

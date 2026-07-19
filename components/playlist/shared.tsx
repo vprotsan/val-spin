@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import type { Cue, Segment, Song } from '@/types';
+import type { Cue, Segment, Sequence, Song } from '@/types';
 
 // ── Cue colour tokens ─────────────────────────────────────────────────────────
 
@@ -51,6 +51,46 @@ export function fmtMs(ms: number): string {
 
 export function segDuration(seg: Segment): number {
   return seg.songs.reduce((sum, s) => sum + s.durationMs, 0);
+}
+
+// ── Cue gap-filling ───────────────────────────────────────────────────────────
+// "Open" is a synthetic default cue — never stored — that covers any stretch
+// of a song not already covered by a custom (noted) sequence. Custom cues
+// always take precedence; Open only fills what's left over.
+
+export const OPEN_CUE_LABEL = 'Open';
+export const OPEN_TAG = 'bg-zinc-700/40 text-zinc-400';
+
+export interface CueSpan {
+  id: string;
+  startMs: number;
+  endMs: number;
+  note: string;
+  isOpen: boolean;
+}
+
+export function fillCueGaps(sequences: Sequence[], durationMs: number): CueSpan[] {
+  const noted = sequences
+    .filter((s) => s.note)
+    .slice()
+    .sort((a, b) => a.startMs - b.startMs);
+
+  const spans: CueSpan[] = [];
+  let cursor = 0;
+
+  for (const seq of noted) {
+    if (seq.startMs > cursor) spans.push(openSpan(cursor, seq.startMs));
+    spans.push({ id: seq.id, startMs: seq.startMs, endMs: seq.endMs, note: seq.note!, isOpen: false });
+    cursor = Math.max(cursor, seq.endMs);
+  }
+
+  if (cursor < durationMs) spans.push(openSpan(cursor, durationMs));
+
+  return spans;
+}
+
+function openSpan(startMs: number, endMs: number): CueSpan {
+  return { id: `open-${startMs}-${endMs}`, startMs, endMs, note: OPEN_CUE_LABEL, isOpen: true };
 }
 
 // ── MoveBtn ───────────────────────────────────────────────────────────────────
@@ -261,9 +301,9 @@ export function SegmentCard({
               <p className="text-white text-base font-medium truncate">{song.title}</p>
               <p className="text-zinc-400 text-sm truncate">
                 {song.artist}
-                <span className="${isSongActive ? 'text-zinc-200' : 'text-zinc-600'} ml-2 tabular-nums">{fmtMs(song.durationMs)}</span>
+                <span className={`ml-2 tabular-nums ${isSongActive ? 'text-zinc-200' : 'text-zinc-600'}`}>{fmtMs(song.durationMs)}</span>
                 {song.sequences.length > 0 && (
-                  <span className="ml-2 text-zinc-600">{song.sequences.length} {song.sequences.length === 1 ? 'cue' : 'cues'}</span>
+                  <span className={`ml-2 ${isSongActive ? 'text-zinc-100' : 'text-zinc-600'}`}>{song.sequences.length} {song.sequences.length === 1 ? 'cue' : 'cues'}</span>
                 )}
               </p>
             </div>

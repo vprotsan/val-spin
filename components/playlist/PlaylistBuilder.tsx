@@ -12,7 +12,7 @@ import {
 import { CUE_TYPES } from '@/types';
 import type { Cue, Segment, Song } from '@/types';
 import SaveToSpotify from './SaveToSpotify';
-import { SegmentCard, CUE_BTN, CUE_TAG, fmtMs, segDuration } from './shared';
+import { SegmentCard, CUE_BTN, CUE_TAG, OPEN_TAG, fmtMs, segDuration, fillCueGaps } from './shared';
 
 export default function PlaylistBuilder({
   initialSegments,
@@ -107,20 +107,18 @@ export default function PlaylistBuilder({
   );
 
   // ── Cues view ────────────────────────────────────────────────────────────────
-  // One row per sequence note; songs with no notes fall back to the song title.
+  // One row per cue span. Gaps between custom (noted) sequences are filled with
+  // a synthetic "Open" span so every moment of every song shows up as a row.
   const flatCues = segments.flatMap((seg) =>
-    seg.songs.flatMap((song) => {
-      const notedSeqs = song.sequences.filter((s) => s.note);
-      if (notedSeqs.length > 0) {
-        return notedSeqs.map((seq) => ({
-          label: seq.note!,
-          cue: seg.cue,
-          song,
-          durationMs: seq.endMs - seq.startMs,
-        }));
-      }
-      return [{ label: song.title, cue: seg.cue, song, durationMs: song.durationMs }];
-    })
+    seg.songs.flatMap((song) =>
+      fillCueGaps(song.sequences, song.durationMs).map((span) => ({
+        label: span.note,
+        cue: seg.cue,
+        song,
+        durationMs: span.endMs - span.startMs,
+        isOpen: span.isOpen,
+      }))
+    )
   );
 
   // ── Render ───────────────────────────────────────────────────────────────────
@@ -161,14 +159,18 @@ export default function PlaylistBuilder({
           {flatCues.length === 0 && (
             <p className="text-zinc-600 text-sm px-4 py-3 text-center">No songs in playlist yet.</p>
           )}
-          {flatCues.map(({ label, cue, song, durationMs }, idx) => (
+          {flatCues.map(({ label, cue, song, durationMs, isOpen }, idx) => (
             <div
               key={`${song.id}-${idx}`}
               className="flex items-center gap-3 px-4 py-3 border-b border-zinc-800/60 last:border-0"
             >
               <span className="text-zinc-600 text-sm tabular-nums w-5 shrink-0 text-right">{idx + 1}</span>
               <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${CUE_TAG[cue]}`}>{cue}</span>
-              <span className="text-white text-base truncate">{label}</span>
+              {isOpen ? (
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${OPEN_TAG}`}>{label}</span>
+              ) : (
+                <span className="text-white text-base truncate">{label}</span>
+              )}
               <span className="text-zinc-600 text-sm tabular-nums shrink-0 ml-auto">
                 {fmtMs(durationMs)}
               </span>

@@ -765,7 +765,7 @@ function EditRow({
   return (
     <li className="bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 space-y-2">
       {error && <p className="text-red-400 text-sm">{error}</p>}
-      <div className="flex gap-2">
+      <div className="flex-column">
         <label className="flex-1 space-y-0.5">
           <span className="text-zinc-500 text-sm">Start (m:ss)</span>
           <div className="flex gap-1">
