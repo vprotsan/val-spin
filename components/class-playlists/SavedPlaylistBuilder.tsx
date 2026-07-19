@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition, useCallback, type ReactNode } from 'react';
+import { useTransition, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import {
   spAddSegmentAction,
   spRemoveSegmentAction,
@@ -30,6 +30,7 @@ export default function SavedPlaylistBuilder({
   songsByCue,
   isEditing,
   activeFlatIndex = -1,
+  activePositionMs = -1,
   viewMode = 'songs',
 }: {
   playlistId: string;
@@ -38,6 +39,7 @@ export default function SavedPlaylistBuilder({
   songsByCue: Record<Cue, Song[]>;
   isEditing: boolean;
   activeFlatIndex?: number;
+  activePositionMs?: number;
   viewMode?: 'songs' | 'cues';
 }) {
   const [addingCuePicker, setAddingCuePicker] = useState(false);
@@ -91,11 +93,34 @@ export default function SavedPlaylistBuilder({
     [playlistId, sync],
   );
 
+  // flatIdx matches the flat song ordering used by PlaylistPlayer's queue
+  // (segments.flatMap(seg => seg.songs)) so activeFlatIndex lines up here too.
+  let songFlatIdx = -1;
   const flatCues = segments.flatMap((seg) =>
     seg.songs.flatMap((song) => {
-      const notes = song.sequences.filter((s) => s.note).map((s) => s.note!);
-      if (notes.length > 0) return notes.map((note) => ({ label: note, cue: seg.cue, song }));
-      return [{ label: song.title, cue: seg.cue, song }];
+      songFlatIdx++;
+      const flatIdx = songFlatIdx;
+      const notedSeqs = song.sequences.filter((s) => s.note);
+      if (notedSeqs.length > 0) {
+        return notedSeqs.map((seq) => ({
+          label: seq.note!,
+          cue: seg.cue,
+          song,
+          flatIdx,
+          durationMs: seq.endMs - seq.startMs,
+          startMs: seq.startMs as number | null,
+          endMs: seq.endMs as number | null,
+        }));
+      }
+      return [{
+        label: song.title,
+        cue: seg.cue,
+        song,
+        flatIdx,
+        durationMs: song.durationMs,
+        startMs: null as number | null,
+        endMs: null as number | null,
+      }];
     })
   );
 
@@ -111,19 +136,23 @@ export default function SavedPlaylistBuilder({
           {flatCues.length === 0 && (
             <p className="text-zinc-600 text-sm px-4 py-3 text-center">No songs in playlist yet.</p>
           )}
-          {flatCues.map(({ label, cue, song }, idx) => (
-            <div
-              key={`${song.id}-${idx}`}
-              className="flex items-center gap-3 px-4 py-3 border-b border-zinc-800/60 last:border-0"
-            >
-              <span className="text-zinc-600 text-sm tabular-nums w-5 shrink-0 text-right">{idx + 1}</span>
-              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${CUE_TAG[cue]}`}>{cue}</span>
-              <span className="text-white text-base truncate">{label}</span>
-              <span className="text-zinc-600 text-sm tabular-nums shrink-0 ml-auto">
-                {fmtMs(song.durationMs)}
-              </span>
-            </div>
-          ))}
+          {flatCues.map(({ label, cue, song, flatIdx, durationMs, startMs, endMs }, idx) => {
+            const isActive =
+              flatIdx === activeFlatIndex &&
+              (startMs === null || endMs === null
+                ? true
+                : activePositionMs >= startMs && activePositionMs < endMs);
+            return (
+              <CueRow
+                key={`${song.id}-${idx}`}
+                idx={idx}
+                label={label}
+                cue={cue}
+                durationMs={durationMs}
+                isActive={isActive}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -192,6 +221,48 @@ export default function SavedPlaylistBuilder({
           </button>
         )
       )}
+    </div>
+  );
+}
+
+// ── CueRow ────────────────────────────────────────────────────────────────────
+// Scrolls itself into view and gets a strong highlight the moment it becomes
+// the active (currently playing) cue — mirrors the highlight treatment used
+// for the active song row in the Songs view (see shared.tsx SegmentCard).
+
+function CueRow({
+  idx,
+  label,
+  cue,
+  durationMs,
+  isActive,
+}: {
+  idx: number;
+  label: string;
+  cue: Cue;
+  durationMs: number;
+  isActive: boolean;
+}) {
+  const rowRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (isActive) rowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [isActive]);
+
+  return (
+    <div
+      ref={rowRef}
+      style={isActive ? { scrollMarginTop: '8rem', scrollMarginBottom: '8rem' } : undefined}
+      className={`flex items-center gap-3 px-4 py-3 border-b border-zinc-800/60 last:border-0 transition-colors ${
+        isActive ? 'bg-white/30' : ''
+      }`}
+    >
+      <span className="text-zinc-600 text-sm tabular-nums w-5 shrink-0 text-right">{idx + 1}</span>
+      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${CUE_TAG[cue]}`}>{cue}</span>
+      <span className={`text-base truncate ${isActive ? 'text-white font-semibold' : 'text-white'}`}>{label}</span>
+      <span className={`text-sm tabular-nums shrink-0 ml-auto ${isActive ? 'text-zinc-100' : 'text-zinc-600'}`}>
+        {fmtMs(durationMs)}
+      </span>
     </div>
   );
 }

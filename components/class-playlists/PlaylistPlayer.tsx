@@ -230,9 +230,11 @@ function SegmentedTrackBar({
 export default function PlaylistPlayer({
   songs,
   onCurrentIndexChange,
+  onPositionChange,
 }: {
   songs: Song[];
   onCurrentIndexChange?: (idx: number) => void;
+  onPositionChange?: (ms: number) => void;
 }) {
   // Computed once on mount — safe because navigator.userAgent never changes mid-session
   const [isMobile]    = useState(detectMobile);
@@ -247,6 +249,7 @@ export default function PlaylistPlayer({
   const playbackRef               = useRef<PlaybackState | null>(null);
   const hasStartedRef             = useRef(false);
   const onCurrentIndexChangeRef   = useRef(onCurrentIndexChange);
+  const onPositionChangeRef       = useRef(onPositionChange);
   // Timestamp of the last playAtIndex call — guards against the "instant
   // paused-at-0" false-positive that triggers rapid auto-advance when the SDK
   // fails to start (e.g. on mobile, or during a 404 retry).
@@ -262,6 +265,8 @@ export default function PlaylistPlayer({
   useEffect(() => { currentIndexRef.current = currentIndex; },             [currentIndex]);
   useEffect(() => { playbackRef.current = playback; },                     [playback]);
   useEffect(() => { onCurrentIndexChangeRef.current = onCurrentIndexChange; }, [onCurrentIndexChange]);
+  useEffect(() => { onPositionChangeRef.current = onPositionChange; }, [onPositionChange]);
+  useEffect(() => { onPositionChangeRef.current?.(playback?.positionMs ?? 0); }, [playback?.positionMs]);
 
   // ── Progress ticker (250 ms) ────────────────────────────────────────────────
 
@@ -434,7 +439,7 @@ export default function PlaylistPlayer({
   // the REST API to control a Spotify client running in the background on the
   // same device (or any other active Spotify device).
   if (isMobile) {
-    return <ConnectPlayer songs={songs} onCurrentIndexChange={onCurrentIndexChange} />;
+    return <ConnectPlayer songs={songs} onCurrentIndexChange={onCurrentIndexChange} onPositionChange={onPositionChange} />;
   }
 
   const currentSong  = songs[currentIndex];

@@ -110,9 +110,16 @@ export default function PlaylistBuilder({
   // One row per sequence note; songs with no notes fall back to the song title.
   const flatCues = segments.flatMap((seg) =>
     seg.songs.flatMap((song) => {
-      const notes = song.sequences.filter((s) => s.note).map((s) => s.note!);
-      if (notes.length > 0) return notes.map((note) => ({ label: note, cue: seg.cue, song }));
-      return [{ label: song.title, cue: seg.cue, song }];
+      const notedSeqs = song.sequences.filter((s) => s.note);
+      if (notedSeqs.length > 0) {
+        return notedSeqs.map((seq) => ({
+          label: seq.note!,
+          cue: seg.cue,
+          song,
+          durationMs: seq.endMs - seq.startMs,
+        }));
+      }
+      return [{ label: song.title, cue: seg.cue, song, durationMs: song.durationMs }];
     })
   );
 
@@ -154,7 +161,7 @@ export default function PlaylistBuilder({
           {flatCues.length === 0 && (
             <p className="text-zinc-600 text-sm px-4 py-3 text-center">No songs in playlist yet.</p>
           )}
-          {flatCues.map(({ label, cue, song }, idx) => (
+          {flatCues.map(({ label, cue, song, durationMs }, idx) => (
             <div
               key={`${song.id}-${idx}`}
               className="flex items-center gap-3 px-4 py-3 border-b border-zinc-800/60 last:border-0"
@@ -163,7 +170,7 @@ export default function PlaylistBuilder({
               <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${CUE_TAG[cue]}`}>{cue}</span>
               <span className="text-white text-base truncate">{label}</span>
               <span className="text-zinc-600 text-sm tabular-nums shrink-0 ml-auto">
-                {fmtMs(song.durationMs)}
+                {fmtMs(durationMs)}
               </span>
             </div>
           ))}

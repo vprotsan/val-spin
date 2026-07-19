@@ -37,6 +37,7 @@ export default function PlaylistEditorPage({
   const [name, setName]                 = useState(initialName);
   const [segments, setSegments]         = useState<Segment[]>(initialSegments);
   const [activeSongIndex, setActiveSongIndex] = useState(0);
+  const [activePositionMs, setActivePositionMs] = useState(0);
   const [viewMode, setViewMode]         = useState<'songs' | 'cues'>('songs');
   const nameInputRef                    = useRef<HTMLInputElement>(null);
 
@@ -201,12 +202,17 @@ export default function PlaylistEditorPage({
           songsByCue={songsByCue}
           isEditing={isEditing}
           activeFlatIndex={activeSongIndex}
+          activePositionMs={activePositionMs}
           viewMode={viewMode}
         />
       </div>
 
       {/* ── Sticky playback bar ───────────────────────────────────────────── */}
-      <PlaylistPlayer songs={flatSongsForPlayer} onCurrentIndexChange={setActiveSongIndex} />
+      <PlaylistPlayer
+        songs={flatSongsForPlayer}
+        onCurrentIndexChange={setActiveSongIndex}
+        onPositionChange={setActivePositionMs}
+      />
     </main>
   );
 }

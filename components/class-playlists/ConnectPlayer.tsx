@@ -164,9 +164,11 @@ function deviceIcon(type: string): string {
 export default function ConnectPlayer({
   songs,
   onCurrentIndexChange,
+  onPositionChange,
 }: {
   songs: Song[];
   onCurrentIndexChange?: (idx: number) => void;
+  onPositionChange?: (ms: number) => void;
 }) {
   const [devices, setDevices]                       = useState<SpotifyDevice[]>([]);
   const [selectedDeviceId, setSelectedDeviceId]     = useState<string | null>(null);
@@ -183,7 +185,10 @@ export default function ConnectPlayer({
   const pollRef                  = useRef<ReturnType<typeof setInterval> | null>(null);
   const isPlayingRef             = useRef(false);
   const onCurrentIndexChangeRef  = useRef(onCurrentIndexChange);
+  const onPositionChangeRef      = useRef(onPositionChange);
   useEffect(() => { onCurrentIndexChangeRef.current = onCurrentIndexChange; }, [onCurrentIndexChange]);
+  useEffect(() => { onPositionChangeRef.current = onPositionChange; }, [onPositionChange]);
+  useEffect(() => { onPositionChangeRef.current?.(positionMs); }, [positionMs]);
 
   const uris = useMemo(() => songs.map((s) => s.spotifyUri), [songs]);
 
