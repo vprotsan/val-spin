@@ -474,9 +474,10 @@ export default function ConnectPlayer({
               {fmtMs(positionMs)} / {fmtMs(effectiveDur)}
             </span>
           )}
-          <span className="text-zinc-700 text-3xl tabular-nums ml-auto">
+          <p className="text-zinc-100 text-4xl tabular-nums">{fmtMs(countdownMs)}</p>
+          {/* <span className="text-zinc-700 text-3xl tabular-nums ml-auto">
             {currentIndex + 1} / {songs.length}
-          </span>
+          </span> */}
         </div>
 
         {/* All sequence notes — scrollable list, active one highlighted */}
