@@ -105,9 +105,24 @@ export interface NoteOption {
 }
 
 export const NOTE_OPTIONS: NoteOption[] = [
-  { value: 'speed up', color: '#f43f5e' }, // rose
-  { value: 'jump',      color: '#f59e0b' }, // amber
-  { value: 'run',       color: '#10b981' }, // emerald
+  { value: 'Sprint', color: '#f60029' }, // rose
+  { value: 'Speed up', color: '#ffad50' }, // rose
+  { value: 'Jumps',      color: '#f59e0b' }, // amber
+  { value: 'Run',       color: '#cd6707' }, // emerald
+  { value: 'Standing Run',       color: '#f9ec00' }, // emerald
+  { value: 'Jumps 4 counts',       color: '#f59e0b' }, // emerald
+  { value: 'Jumps 2 counts',       color: '#f59e0b' }, // emerald
+  { value: 'Jumps 8 counts',       color: '#f59e0b' }, // emerald
+  { value: 'Climb',       color: '#ff6f00' }, // emerald
+  { value: 'Seated Climb',       color: '#ff6f00' }, // emerald
+  { value: 'Standing Climb',       color: '#ff6f00' }, // emerald
+  { value: 'Flat',       color: '#09ff26' }, // emerald
+  { value: 'Choreo Hands',       color: '#deff09' }, // emerald
+  { value: 'Choreo Duck-Up',       color: '#deff09' }, // emerald
+  { value: 'Choreo Hands Sides Up-Down',       color: '#deff09' }, // emerald
+  { value: 'Choreo',       color: '#deff09' }, // emerald
+  { value: 'Freeze',       color: '#ff5b09' }, // emerald
+  { value: 'Jog',       color: '#74ff09' }, // emerald
 ];
 
 // Fallback for sequences with no note, or a note outside the fixed list
