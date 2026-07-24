@@ -6,6 +6,8 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { CUE_TYPES } from '@/types';
 import type { Cue, Segment, Sequence, Song } from '@/types';
 
 // ── Cue colour tokens ─────────────────────────────────────────────────────────
@@ -166,32 +168,72 @@ export function MoveBtn({
 
 export function SongPicker({
   songs,
+  allSongs,
   inSegmentIds,
   onPick,
   onClose,
 }: {
   segmentId: string;
   songs: Song[];
+  allSongs: Song[];
   inSegmentIds: Set<string>;
   onPick: (songId: string) => void;
   onClose: () => void;
 }) {
-  if (songs.length === 0) {
-    return (
-      <div className="py-2 text-center">
-        <p className="text-zinc-500 text-sm">
-          No songs tagged with this cue yet.{' '}
-          <a href="/tagging" className="text-zinc-400 underline">Tag songs →</a>
-        </p>
-        <button onClick={onClose} className="text-zinc-600 text-sm mt-1">cancel</button>
-      </div>
-    );
-  }
+  const [query, setQuery] = useState('');
+  const [scope, setScope] = useState<'cue' | 'all'>('cue');
+
+  const pool = scope === 'all' ? allSongs : songs;
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? pool.filter((s) => s.title.toLowerCase().includes(q) || s.artist.toLowerCase().includes(q))
+    : pool;
 
   return (
     <div className="rounded-xl border border-zinc-700 bg-zinc-900 overflow-hidden">
+      {/* Search + scope toggle */}
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-zinc-800/60">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search title or artist…"
+          className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-white text-sm outline-none focus:border-zinc-500"
+        />
+        <div className="flex items-center gap-0.5 bg-zinc-800 border border-zinc-700 rounded-full p-0.5 shrink-0">
+          <button
+            onClick={() => setScope('cue')}
+            className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+              scope === 'cue' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            This cue
+          </button>
+          <button
+            onClick={() => setScope('all')}
+            className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+              scope === 'all' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            All tags
+          </button>
+        </div>
+      </div>
+
+      {/* Results */}
       <div className="max-h-52 overflow-y-auto">
-        {songs.map((song) => (
+        {filtered.length === 0 && (
+          <p className="text-zinc-500 text-sm px-3 py-3 text-center">
+            {pool.length === 0 ? (
+              <>
+                {scope === 'cue' ? 'No songs tagged with this cue yet.' : 'No tagged songs yet.'}{' '}
+                <a href="/tagging" className="text-zinc-400 underline">Tag songs →</a>
+              </>
+            ) : (
+              'No matches.'
+            )}
+          </p>
+        )}
+        {filtered.map((song) => (
           <button
             key={song.id}
             onClick={() => onPick(song.id)}
@@ -201,6 +243,11 @@ export function SongPicker({
               <p className="text-white text-base truncate">{song.title}</p>
               <p className="text-zinc-400 text-sm truncate">{song.artist}</p>
             </div>
+            {scope === 'all' && (
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${CUE_TAG[song.cue]}`}>
+                {song.cue}
+              </span>
+            )}
             <span className="text-zinc-600 text-sm tabular-nums shrink-0">
               {fmtMs(song.durationMs)}
             </span>
@@ -220,6 +267,158 @@ export function SongPicker({
   );
 }
 
+// ── AddSongEntry ──────────────────────────────────────────────────────────────
+// Top-level "+ Add Song" control shown below the segment list. Lets the
+// instructor add a song by picking a cue first (then a song within it) or by
+// searching straight across every tagged song, without pre-creating a
+// segment. The caller (onPick) is responsible for finding-or-creating the
+// matching segment.
+
+export function AddSongEntry({
+  allSongs,
+  placedIds,
+  onPick,
+}: {
+  allSongs: Song[];
+  placedIds: Set<string>;
+  onPick: (song: Song) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<'byTag' | 'allTags'>('byTag');
+  const [pickedCue, setPickedCue] = useState<Cue | null>(null);
+  const [query, setQuery] = useState('');
+
+  const close = () => {
+    setOpen(false);
+    setMode('byTag');
+    setPickedCue(null);
+    setQuery('');
+  };
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="w-full rounded-2xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 py-4 text-zinc-400 hover:text-white text-base font-medium transition-colors flex items-center justify-center gap-2"
+      >
+        <span className="text-xl leading-none">+</span> Add Song
+      </button>
+    );
+  }
+
+  const showCuePicker = mode === 'byTag' && !pickedCue;
+  const pool = mode === 'allTags' ? allSongs : allSongs.filter((s) => s.cue === pickedCue);
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? pool.filter((s) => s.title.toLowerCase().includes(q) || s.artist.toLowerCase().includes(q))
+    : pool;
+
+  return (
+    <div className="rounded-2xl border border-zinc-700 bg-zinc-900 p-3 space-y-3">
+      {/* Mode toggle */}
+      <div className="flex items-center gap-0.5 bg-zinc-800 border border-zinc-700 rounded-full p-0.5 w-fit mx-auto">
+        <button
+          onClick={() => { setMode('byTag'); setPickedCue(null); setQuery(''); }}
+          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+            mode === 'byTag' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'
+          }`}
+        >
+          By tag
+        </button>
+        <button
+          onClick={() => { setMode('allTags'); setPickedCue(null); setQuery(''); }}
+          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+            mode === 'allTags' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'
+          }`}
+        >
+          All tags
+        </button>
+      </div>
+
+      {showCuePicker ? (
+        <div className="space-y-2">
+          <p className="text-zinc-400 text-base font-medium text-center">Choose a cue to search within:</p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+            {CUE_TYPES.map((cue) => (
+              <button
+                key={cue}
+                onClick={() => setPickedCue(cue)}
+                className={`rounded-xl border py-3 text-base font-semibold transition-all active:scale-95 ${CUE_BTN[cue]}`}
+              >
+                {cue}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-zinc-700 bg-zinc-950 overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-zinc-800/60">
+            {mode === 'byTag' && (
+              <button
+                onClick={() => setPickedCue(null)}
+                className="text-zinc-500 hover:text-white text-sm shrink-0"
+              >
+                ← {pickedCue}
+              </button>
+            )}
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search title or artist…"
+              autoFocus
+              className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-white text-sm outline-none focus:border-zinc-500"
+            />
+          </div>
+          <div className="max-h-52 overflow-y-auto">
+            {filtered.length === 0 && (
+              <p className="text-zinc-500 text-sm px-3 py-3 text-center">
+                {pool.length === 0 ? (
+                  <>
+                    {mode === 'byTag' ? 'No songs tagged with this cue yet.' : 'No tagged songs yet.'}{' '}
+                    <a href="/tagging" className="text-zinc-400 underline">Tag songs →</a>
+                  </>
+                ) : (
+                  'No matches.'
+                )}
+              </p>
+            )}
+            {filtered.map((song) => (
+              <button
+                key={song.id}
+                onClick={() => { onPick(song); close(); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 border-b border-zinc-800/60 last:border-0 text-left hover:bg-zinc-800/60 active:bg-zinc-800 transition-colors"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-base truncate">{song.title}</p>
+                  <p className="text-zinc-400 text-sm truncate">{song.artist}</p>
+                </div>
+                {mode === 'allTags' && (
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${CUE_TAG[song.cue]}`}>
+                    {song.cue}
+                  </span>
+                )}
+                <span className="text-zinc-600 text-sm tabular-nums shrink-0">
+                  {fmtMs(song.durationMs)}
+                </span>
+                {placedIds.has(song.id) && (
+                  <span className="text-zinc-600 text-sm shrink-0">+1</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={close}
+        className="w-full text-center text-zinc-500 text-sm py-1 hover:text-zinc-300"
+      >
+        cancel
+      </button>
+    </div>
+  );
+}
+
 // ── SegmentCard ───────────────────────────────────────────────────────────────
 
 export function SegmentCard({
@@ -227,6 +426,7 @@ export function SegmentCard({
   segIdx,
   totalSegments,
   availableSongs,
+  allSongs,
   onMoveSegment,
   onRemoveSegment,
   onAddSong,
@@ -240,6 +440,7 @@ export function SegmentCard({
   segIdx: number;
   totalSegments: number;
   availableSongs: Song[];
+  allSongs: Song[];
   onMoveSegment: (id: string, dir: 'up' | 'down') => void;
   onRemoveSegment: (id: string) => void;
   onAddSong: (segId: string, songId: string) => void;
@@ -336,9 +537,12 @@ export function SegmentCard({
               </div>
             )}
 
-            {/* Song info + in-track sequences */}
-            <div className={`flex-1 min-w-0 ${isEditing ? 'ml-1' : ''}`}>
-              <p className="text-white text-base font-medium truncate">{song.title}</p>
+            {/* Song info + in-track sequences — tap to open timestamp editor */}
+            <Link
+              href={`/songs/${encodeURIComponent(song.spotifyUri)}`}
+              className={`flex-1 min-w-0 group ${isEditing ? 'ml-1' : ''}`}
+            >
+              <p className="text-white text-base font-medium truncate group-hover:text-zinc-200">{song.title}</p>
               <p className="text-zinc-400 text-sm truncate">
                 {song.artist}
                 <span className={`ml-2 tabular-nums ${isSongActive ? 'text-zinc-200' : 'text-zinc-600'}`}>{fmtMs(song.durationMs)}</span>
@@ -346,7 +550,7 @@ export function SegmentCard({
                   <span className={`ml-2 ${isSongActive ? 'text-zinc-100' : 'text-zinc-600'}`}>{song.sequences.length} {song.sequences.length === 1 ? 'cue' : 'cues'}</span>
                 )}
               </p>
-            </div>
+            </Link>
 
             {/* Delete button — edit mode only */}
             {isEditing && (
@@ -373,6 +577,7 @@ export function SegmentCard({
               <SongPicker
                 segmentId={segment.id}
                 songs={availableSongs}
+                allSongs={allSongs}
                 inSegmentIds={inSegmentIds}
                 onPick={(songId) => { onAddSong(segment.id, songId); setShowPicker(false); }}
                 onClose={() => setShowPicker(false)}

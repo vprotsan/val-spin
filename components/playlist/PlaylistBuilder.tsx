@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useCallback } from 'react';
+import { useState, useTransition, useCallback, useMemo } from 'react';
 import {
   addSegmentAction,
   removeSegmentAction,
@@ -9,10 +9,9 @@ import {
   removeSongFromSegmentAction,
   moveSongAction,
 } from '@/app/actions/playlist';
-import { CUE_TYPES } from '@/types';
 import type { Cue, Segment, Song } from '@/types';
 import SaveToSpotify from './SaveToSpotify';
-import { SegmentCard, CUE_BTN, CUE_TAG, OPEN_TAG, fmtMs, segDuration, fillCueGaps } from './shared';
+import { SegmentCard, AddSongEntry, CUE_TAG, OPEN_TAG, fmtMs, segDuration, fillCueGaps } from './shared';
 
 export default function PlaylistBuilder({
   initialSegments,
@@ -22,22 +21,15 @@ export default function PlaylistBuilder({
   songsByCue: Record<Cue, Song[]>;
 }) {
   const [segments, setSegments] = useState<Segment[]>(initialSegments);
-  const [addingCuePicker, setAddingCuePicker] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [viewMode, setViewMode] = useState<'songs' | 'cues'>('songs');
 
   const totalMs = segments.reduce((sum, s) => sum + segDuration(s), 0);
-
-  // ── Add segment ─────────────────────────────────────────────────────────────
-  const handleAddSegment = useCallback((cue: Cue) => {
-    setAddingCuePicker(false);
-    startTransition(async () => {
-      const result = await addSegmentAction(cue);
-      if (result.ok) {
-        setSegments((prev) => [...prev, result.segment]);
-      }
-    });
-  }, []);
+  const allSongs = useMemo(() => Object.values(songsByCue).flat(), [songsByCue]);
+  const placedSongIds = useMemo(
+    () => new Set(segments.flatMap((seg) => seg.songs.map((s) => s.id))),
+    [segments],
+  );
 
   // ── Remove segment ──────────────────────────────────────────────────────────
   const handleRemoveSegment = useCallback((segmentId: string) => {
@@ -105,6 +97,31 @@ export default function PlaylistBuilder({
     },
     [],
   );
+
+  // ── Add song (top-level) ───────────────────────────────────────────────────
+  // Finds the existing segment matching the song's cue, or creates one, then
+  // adds the song to it — collapses "add segment" + "add song" into one step.
+  const handlePickSongTopLevel = useCallback((song: Song) => {
+    startTransition(async () => {
+      let segmentId = segments.find((s) => s.cue === song.cue)?.id;
+      if (!segmentId) {
+        const segResult = await addSegmentAction(song.cue);
+        if (!segResult.ok) return;
+        segmentId = segResult.segment.id;
+        setSegments((prev) => [...prev, segResult.segment]);
+      }
+      const songResult = await addSongToSegmentAction(segmentId, song.id);
+      if (songResult.ok) {
+        setSegments((prev) =>
+          prev.map((seg) =>
+            seg.id === segmentId
+              ? { ...seg, songs: [...seg.songs, songResult.song] }
+              : seg,
+          ),
+        );
+      }
+    });
+  }, [segments]);
 
   // ── Cues view ────────────────────────────────────────────────────────────────
   // One row per cue span. Gaps between custom (noted) sequences are filled with
@@ -187,6 +204,7 @@ export default function PlaylistBuilder({
           segIdx={segIdx}
           totalSegments={segments.length}
           availableSongs={songsByCue[seg.cue] ?? []}
+          allSongs={allSongs}
           onMoveSegment={handleMoveSegment}
           onRemoveSegment={handleRemoveSegment}
           onAddSong={handleAddSong}
@@ -198,40 +216,18 @@ export default function PlaylistBuilder({
       {/* Empty state */}
       {segments.length === 0 && viewMode === 'songs' && (
         <p className="text-zinc-600 text-base text-center py-8">
-          No segments yet. Add one below to start building your class.
+          No songs yet. Add one below to start building your class.
         </p>
       )}
 
-      {/* Add segment — hidden in cues view */}
-      {viewMode === 'songs' && (addingCuePicker ? (
-        <div className="rounded-2xl border border-zinc-700 bg-zinc-900 p-4 space-y-3">
-          <p className="text-zinc-400 text-base font-medium">Choose a cue for this segment:</p>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-            {CUE_TYPES.map((cue) => (
-              <button
-                key={cue}
-                onClick={() => handleAddSegment(cue)}
-                className={`rounded-xl border py-3 text-base font-semibold transition-all active:scale-95 ${CUE_BTN[cue]}`}
-              >
-                {cue}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={() => setAddingCuePicker(false)}
-            className="text-zinc-500 text-sm w-full text-center pt-1"
-          >
-            cancel
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={() => setAddingCuePicker(true)}
-          className="w-full rounded-2xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 py-4 text-zinc-400 hover:text-white text-base font-medium transition-colors flex items-center justify-center gap-2"
-        >
-          <span className="text-xl leading-none">+</span> Add Segment
-        </button>
-      ))}
+      {/* Add song — hidden in cues view */}
+      {viewMode === 'songs' && (
+        <AddSongEntry
+          allSongs={allSongs}
+          placedIds={placedSongIds}
+          onPick={handlePickSongTopLevel}
+        />
+      )}
 
       {/* Save to Spotify */}
       <div className="border-t border-zinc-800 pt-4">
